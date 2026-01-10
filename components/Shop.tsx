@@ -56,8 +56,9 @@ interface AccessLog {
   email: string;
   name: string;
   timestamp: number;
-  action: 'login' | 'logout' | 'view_product' | 'add_to_cart' | 'checkout' | 'signup';
+  action: 'login' | 'logout' | 'view_product' | 'add_to_cart' | 'checkout' | 'signup' | 'guest_view';
   details?: string;
+  isGuest?: boolean;
 }
 
 // CS Inquiry Interface
@@ -104,6 +105,8 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showCSModal, setShowCSModal] = useState(false);
   const [csForm, setCsForm] = useState({ subject: '', message: '' });
+  const [showProductEditModal, setShowProductEditModal] = useState(false);
+  const [productEditForm, setProductEditForm] = useState<{ name: string; price: number; originalPrice: number; image: string } | null>(null);
   
   // Save users to localStorage whenever it changes
   useEffect(() => {
@@ -197,6 +200,7 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
 
   // Image Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const productImageInputRef = useRef<HTMLInputElement>(null);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
   // Check if current user is admin
@@ -355,42 +359,87 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
       const isGenderMatch = product.gender === gender;
       const isCategoryMatch = selectedCategory === '전체' || product.category === selectedCategory;
       const isSearchMatch = searchQuery === '' || 
-                            product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             product.brand.toLowerCase().includes(searchQuery.toLowerCase());
-      return isGenderMatch && isCategoryMatch && isSearchMatch;
+      const result = isGenderMatch && isCategoryMatch && isSearchMatch;
+      
+      // 비회원 상품 조회 추적 (필터링된 결과에 포함된 상품만)
+      if (result && !isLoggedIn) {
+        // 이미 handleProductClick에서 추적되므로 여기서는 중복 방지
+        // 또는 여기서도 추적하려면 trackAccessLog 호출 가능
+      }
+      
+      return result;
     });
-  }, [products, gender, selectedCategory, searchQuery]);
+  }, [products, gender, selectedCategory, searchQuery, isLoggedIn]);
 
-  // Image Upload Handlers
-  const handleImageEdit = (e: React.MouseEvent, productId: number) => {
+  // Product Edit Handlers
+  const handleProductEdit = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
-    setEditingProductId(productId);
-    fileInputRef.current?.click();
+    setProductEditForm({
+      name: product.name,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      image: product.image
+    });
+    setEditingProductId(product.id);
+    setShowProductEditModal(true);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && editingProductId) {
-        const imageUrl = URL.createObjectURL(file);
-        
-        // Update product list
-        setProducts(prev => prev.map(p => p.id === editingProductId ? { ...p, image: imageUrl } : p));
-        
-        // Update selected product if it matches
-        if (selectedProduct?.id === editingProductId) {
-            setSelectedProduct(prev => prev ? { ...prev, image: imageUrl } : null);
+  const handleProductSave = () => {
+    if (!editingProductId || !productEditForm) return;
+    
+    const updatedProduct = {
+      ...products.find(p => p.id === editingProductId)!,
+      name: productEditForm.name,
+      price: productEditForm.price,
+      originalPrice: productEditForm.originalPrice,
+      image: productEditForm.image
+    };
+    
+    // Update product list
+    setProducts(prev => prev.map(p => p.id === editingProductId ? updatedProduct : p));
+    
+    // Update selected product if it matches
+    if (selectedProduct?.id === editingProductId) {
+      setSelectedProduct(updatedProduct);
+    }
+    
+    // Update cart items
+    setCart(prev => prev.map(p => p.id === editingProductId ? { ...p, ...updatedProduct } : p));
+    
+    // Update checkout items
+    setCheckoutItems(prev => prev.map(p => p.id === editingProductId ? { ...p, ...updatedProduct } : p));
+    
+    // Update click stats if product name changed
+    if (productClickStats[editingProductId]) {
+      setProductClickStats(prev => ({
+        ...prev,
+        [editingProductId]: {
+          ...prev[editingProductId],
+          productName: productEditForm.name
         }
-        
-        // Update cart items
-        setCart(prev => prev.map(p => p.id === editingProductId ? { ...p, image: imageUrl } : p));
-        
-        // Update checkout items
-        setCheckoutItems(prev => prev.map(p => p.id === editingProductId ? { ...p, image: imageUrl } : p));
-        
-        showToastNotification("사진이 변경되었습니다.");
+      }));
+    }
+    
+    setShowProductEditModal(false);
+    setEditingProductId(null);
+    setProductEditForm(null);
+    showToastNotification("상품 정보가 수정되었습니다.");
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && productEditForm) {
+      const imageUrl = URL.createObjectURL(file);
+      setProductEditForm({ ...productEditForm, image: imageUrl });
     }
     // Reset file input
     if (e.target) e.target.value = '';
+  };
+
+  const handleImageSelectClick = () => {
+    productImageInputRef.current?.click();
   };
 
   const handleGenderChange = (newGender: Gender) => {
@@ -398,19 +447,18 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     setSelectedCategory('전체');
   };
 
-  // Track access log
+  // Track access log (both logged-in and guest users)
   const trackAccessLog = (action: AccessLog['action'], details?: string) => {
-    if (currentUser) {
-      const newLog: AccessLog = {
-        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        email: currentUser.email,
-        name: currentUser.name,
-        timestamp: Date.now(),
-        action,
-        details
-      };
-      setAccessLogs(prev => [newLog, ...prev].slice(0, 1000)); // Keep last 1000 logs
-    }
+    const newLog: AccessLog = {
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: currentUser?.email || '비회원',
+      name: currentUser?.name || '비회원',
+      timestamp: Date.now(),
+      action: !currentUser && action === 'view_product' ? 'guest_view' : action,
+      details,
+      isGuest: !currentUser
+    };
+    setAccessLogs(prev => [newLog, ...prev].slice(0, 1000)); // Keep last 1000 logs
   };
 
   // Track product click
@@ -432,6 +480,7 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     setSelectedProduct(product);
     setRentalDays(1); // Default to 1 day
     setShopView('detail');
+    // 비회원도 접속 기록에 포함
     trackAccessLog('view_product', product.name);
   };
 
@@ -866,12 +915,12 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                 className="w-full h-full object-contain p-4 transition-transform duration-500"
               />
               
-              {/* Camera Icon - Only for Admin */}
+              {/* Edit Icon - Only for Admin */}
               {isAdmin && (
                 <button 
-                    onClick={(e) => handleImageEdit(e, product.id)}
-                    className="absolute top-3 left-3 p-2 bg-white/80 backdrop-blur-sm shadow-sm rounded-full transition-all border border-stone-100 hover:text-indigo-600 hover:bg-white z-10 text-stone-400"
-                    title="사진 변경 (관리자 전용)"
+                    onClick={(e) => handleProductEdit(e, product)}
+                    className="absolute top-3 left-3 p-2 bg-white/80 backdrop-blur-sm shadow-sm rounded-full transition-all border border-stone-100 hover:text-orange-600 hover:bg-white z-10 text-stone-400"
+                    title="상품 수정 (관리자 전용)"
                 >
                     <Camera size={16} />
                 </button>
@@ -933,12 +982,12 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
               className="w-full h-full object-contain p-8 transition-transform duration-500"
              />
              
-             {/* Camera Icon - Only for Admin */}
-             {isAdmin && (
+             {/* Edit Icon - Only for Admin */}
+             {isAdmin && selectedProduct && (
                 <button 
-                    onClick={(e) => handleImageEdit(e, selectedProduct.id)}
-                    className="absolute top-4 left-4 p-3 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full transition-all shadow-md border border-stone-100 hover:text-indigo-600 text-stone-400 z-10"
-                    title="사진 변경 (관리자 전용)"
+                    onClick={(e) => handleProductEdit(e, selectedProduct)}
+                    className="absolute top-4 left-4 p-3 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full transition-all shadow-md border border-stone-100 hover:text-orange-600 text-stone-400 z-10"
+                    title="상품 수정 (관리자 전용)"
                 >
                     <Camera size={24} />
                 </button>
@@ -1587,13 +1636,19 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                         <td className="py-3 px-2 text-stone-600">
                           {new Date(log.timestamp).toLocaleString('ko-KR')}
                         </td>
-                        <td className="py-3 px-2 text-stone-800 font-medium">{log.name}</td>
+                        <td className="py-3 px-2">
+                          <span className={`font-medium ${log.isGuest ? 'text-orange-600' : 'text-stone-800'}`}>
+                            {log.name}
+                            {log.isGuest && <span className="text-xs text-orange-500 ml-1">(비회원)</span>}
+                          </span>
+                        </td>
                         <td className="py-3 px-2 text-stone-600">{log.email}</td>
                         <td className="py-3 px-2">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                             log.action === 'login' ? 'bg-green-100 text-green-700' :
                             log.action === 'logout' ? 'bg-gray-100 text-gray-700' :
                             log.action === 'view_product' ? 'bg-blue-100 text-blue-700' :
+                            log.action === 'guest_view' ? 'bg-orange-100 text-orange-700' :
                             log.action === 'add_to_cart' ? 'bg-orange-100 text-orange-700' :
                             log.action === 'checkout' ? 'bg-purple-100 text-purple-700' :
                             'bg-stone-100 text-stone-700'
@@ -1601,6 +1656,7 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                             {log.action === 'login' ? '로그인' :
                              log.action === 'logout' ? '로그아웃' :
                              log.action === 'view_product' ? '상품 조회' :
+                             log.action === 'guest_view' ? '비회원 조회' :
                              log.action === 'add_to_cart' ? '장바구니 추가' :
                              log.action === 'checkout' ? '결제' :
                              log.action === 'signup' ? '회원가입' : log.action}
@@ -1642,18 +1698,23 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                   <p className="text-sm font-bold text-orange-600">₩{product.price.toLocaleString()}/일</p>
                   <div className="mt-3 flex gap-2">
                     <button
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setShopView('detail');
-                      }}
+                      onClick={(e) => handleProductEdit(e, product)}
                       className="flex-1 px-3 py-1.5 bg-stone-800 text-white text-xs rounded hover:bg-stone-900 transition-colors"
                     >
                       수정
                     </button>
                     <button
                       onClick={() => {
-                        setProducts(prev => prev.filter(p => p.id !== product.id));
-                        showToastNotification('상품이 삭제되었습니다.');
+                        if (confirm('이 상품을 삭제하시겠습니까?')) {
+                          setProducts(prev => prev.filter(p => p.id !== product.id));
+                          // 관련 통계도 삭제
+                          setProductClickStats(prev => {
+                            const newStats = { ...prev };
+                            delete newStats[product.id];
+                            return newStats;
+                          });
+                          showToastNotification('상품이 삭제되었습니다.');
+                        }
                       }}
                       className="px-3 py-1.5 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
                     >
@@ -2072,13 +2133,12 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
           </div>
       )}
       
-      {/* Hidden File Input for Image Upload */}
+      {/* Hidden File Input for Image Upload (legacy - not used anymore) */}
       <input 
         type="file" 
         ref={fileInputRef} 
         style={{ display: 'none' }} 
         accept="image/*"
-        onChange={handleFileChange}
       />
 
       {/* Logout Confirmation Modal */}
@@ -2176,6 +2236,138 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                   className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition-colors"
                 >
                   문의하기
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Product Edit Modal */}
+      {showProductEditModal && productEditForm && editingProductId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => {
+            setShowProductEditModal(false);
+            setProductEditForm(null);
+            setEditingProductId(null);
+          }}></div>
+          <div className="relative bg-white border border-stone-200 rounded-2xl w-full max-w-2xl p-6 shadow-2xl transform animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+              <Package size={20} />
+              상품 수정
+            </h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleProductSave();
+            }}>
+              <div className="space-y-4 mb-6">
+                {/* Product Image */}
+                <div>
+                  <label className="block text-sm font-medium text-stone-500 mb-2">상품 이미지</label>
+                  <div className="flex gap-4">
+                    <div className="w-32 h-40 bg-stone-100 rounded-lg overflow-hidden flex-shrink-0 relative group">
+                      <img src={productEditForm.image} alt="Preview" className="w-full h-full object-contain p-2" />
+                      <button
+                        type="button"
+                        onClick={handleImageSelectClick}
+                        className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+                      >
+                        <Camera size={24} className="text-white" />
+                      </button>
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        ref={productImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileChange}
+                        style={{ display: 'none' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleImageSelectClick}
+                        className="w-full px-4 py-2 bg-stone-800 text-white text-sm rounded-lg hover:bg-stone-900 transition-colors mb-2"
+                      >
+                        이미지 선택
+                      </button>
+                      <p className="text-xs text-stone-400">이미지를 선택하시면 미리보기가 업데이트됩니다.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Name */}
+                <div>
+                  <label className="block text-sm font-medium text-stone-500 mb-1">제품명 *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="제품명을 입력하세요"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-stone-800 focus:outline-none focus:border-orange-400 transition-colors"
+                    value={productEditForm.name}
+                    onChange={(e) => setProductEditForm({ ...productEditForm, name: e.target.value })}
+                  />
+                </div>
+
+                {/* Product Price */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-500 mb-1">일일 대여료 (원) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="100"
+                      placeholder="2000"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-stone-800 focus:outline-none focus:border-orange-400 transition-colors"
+                      value={productEditForm.price}
+                      onChange={(e) => setProductEditForm({ ...productEditForm, price: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-500 mb-1">정가 (원) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="1000"
+                      placeholder="100000"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-stone-800 focus:outline-none focus:border-orange-400 transition-colors"
+                      value={productEditForm.originalPrice}
+                      onChange={(e) => setProductEditForm({ ...productEditForm, originalPrice: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                {/* Current Product Info (read-only) */}
+                {products.find(p => p.id === editingProductId) && (
+                  <div className="bg-stone-50 p-3 rounded-lg">
+                    <p className="text-xs text-stone-500 mb-1">현재 정보</p>
+                    <p className="text-sm text-stone-700">
+                      카테고리: {products.find(p => p.id === editingProductId)?.category} | 
+                      성별: {products.find(p => p.id === editingProductId)?.gender === 'women' ? '여성' : '남성'} |
+                      브랜드: {products.find(p => p.id === editingProductId)?.brand}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProductEditModal(false);
+                    setProductEditForm(null);
+                    setEditingProductId(null);
+                  }}
+                  className="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl font-medium transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition-colors"
+                >
+                  저장
                 </button>
               </div>
             </form>
