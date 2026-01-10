@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeft, Search, ShoppingBag, Heart, SlidersHorizontal, Star, Truck, ShieldCheck, X, Trash2, CreditCard, CheckCircle2, Minus, Plus, User, Lock, Mail, MapPin, Phone, LogOut, Camera } from 'lucide-react';
+import { ArrowLeft, Search, ShoppingBag, Heart, SlidersHorizontal, Star, Truck, ShieldCheck, X, Trash2, CreditCard, CheckCircle2, Minus, Plus, User, Lock, Mail, MapPin, Phone, LogOut, Camera, BarChart3, Package, ClipboardList, MessageSquare, Users, TrendingUp, Activity } from 'lucide-react';
 
 interface ShopProps {
   onBack: () => void;
 }
 
 type Gender = 'women' | 'men';
-type ShopView = 'listing' | 'detail' | 'cart' | 'checkout' | 'success' | 'login' | 'signup';
+type ShopView = 'listing' | 'detail' | 'cart' | 'checkout' | 'success' | 'login' | 'signup' | 'admin';
 
 interface Product {
   id: number;
@@ -50,6 +50,37 @@ interface Order {
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 }
 
+// Access Log Interface
+interface AccessLog {
+  id: string;
+  email: string;
+  name: string;
+  timestamp: number;
+  action: 'login' | 'logout' | 'view_product' | 'add_to_cart' | 'checkout' | 'signup';
+  details?: string;
+}
+
+// CS Inquiry Interface
+interface CSInquiry {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  subject: string;
+  message: string;
+  timestamp: number;
+  status: 'pending' | 'answered' | 'closed';
+  response?: string;
+}
+
+// Product Click Stats Interface
+interface ProductClickStats {
+  productId: number;
+  productName: string;
+  clickCount: number;
+  lastClicked: number;
+}
+
 
 const Shop: React.FC<ShopProps> = ({ onBack }) => {
   const [shopView, setShopView] = useState<ShopView>('listing');
@@ -71,6 +102,8 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     return saved ? JSON.parse(saved) : null;
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showCSModal, setShowCSModal] = useState(false);
+  const [csForm, setCsForm] = useState({ subject: '', message: '' });
   
   // Save users to localStorage whenever it changes
   useEffect(() => {
@@ -179,6 +212,37 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
   useEffect(() => {
     localStorage.setItem('areum_orders', JSON.stringify(orders));
   }, [orders]);
+
+  // Admin Data States
+  const [accessLogs, setAccessLogs] = useState<AccessLog[]>(() => {
+    const saved = localStorage.getItem('areum_accessLogs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [csInquiries, setCsInquiries] = useState<CSInquiry[]>(() => {
+    const saved = localStorage.getItem('areum_csInquiries');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [productClickStats, setProductClickStats] = useState<Record<number, ProductClickStats>>(() => {
+    const saved = localStorage.getItem('areum_productClickStats');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [adminTab, setAdminTab] = useState<'dashboard' | 'products' | 'orders' | 'cs' | 'users' | 'analytics'>('dashboard');
+
+  // Save admin data to localStorage
+  useEffect(() => {
+    localStorage.setItem('areum_accessLogs', JSON.stringify(accessLogs));
+  }, [accessLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('areum_csInquiries', JSON.stringify(csInquiries));
+  }, [csInquiries]);
+
+  useEffect(() => {
+    localStorage.setItem('areum_productClickStats', JSON.stringify(productClickStats));
+  }, [productClickStats]);
 
   // Categories
   const womenCategories = ['전체', '아우터', '셔츠/블라우스', '팬츠', '스커트', '원피스'];
@@ -334,10 +398,41 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     setSelectedCategory('전체');
   };
 
+  // Track access log
+  const trackAccessLog = (action: AccessLog['action'], details?: string) => {
+    if (currentUser) {
+      const newLog: AccessLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        email: currentUser.email,
+        name: currentUser.name,
+        timestamp: Date.now(),
+        action,
+        details
+      };
+      setAccessLogs(prev => [newLog, ...prev].slice(0, 1000)); // Keep last 1000 logs
+    }
+  };
+
+  // Track product click
+  const trackProductClick = (product: Product) => {
+    const existing = productClickStats[product.id];
+    setProductClickStats(prev => ({
+      ...prev,
+      [product.id]: {
+        productId: product.id,
+        productName: product.name,
+        clickCount: (existing?.clickCount || 0) + 1,
+        lastClicked: Date.now()
+      }
+    }));
+  };
+
   const handleProductClick = (product: Product) => {
+    trackProductClick(product);
     setSelectedProduct(product);
     setRentalDays(1); // Default to 1 day
     setShopView('detail');
+    trackAccessLog('view_product', product.name);
   };
 
   const showToastNotification = (message: string) => {
@@ -373,6 +468,7 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     if (!selectedProduct) return;
     const newItem: CartItem = { ...selectedProduct, rentalDays };
     setCart([...cart, newItem]);
+    trackAccessLog('add_to_cart', selectedProduct.name);
     showToastNotification('장바구니에 담겼습니다');
   };
 
@@ -446,6 +542,9 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     // Save order
     setOrders([...orders, newOrder]);
     
+    // 주문 접속 기록
+    trackAccessLog('checkout', `주문: ${newOrder.id}`);
+    
     setTimeout(() => {
         if (checkoutSource === 'cart') setCart([]);
         setShopView('success');
@@ -477,11 +576,20 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
             setCart([]);
         }
         
-        if (selectedProduct) {
-            setShopView('detail');
-        } else {
-            setShopView('listing');
-        }
+        // 관리자 접속 기록
+        const adminLog: AccessLog = {
+          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          email: adminUser.email,
+          name: adminUser.name,
+          timestamp: Date.now(),
+          action: 'login',
+          details: '관리자 로그인'
+        };
+        setAccessLogs(prev => [adminLog, ...prev]);
+        
+        // 관리자 대시보드로 이동
+        setShopView('admin');
+        setAdminTab('dashboard');
         showToastNotification("관리자 계정으로 로그인되었습니다.");
         return;
     }
@@ -502,6 +610,17 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
         } else {
             setCart([]); // 장바구니가 없으면 빈 배열
         }
+        
+        // 일반 사용자 접속 기록
+        const userLog: AccessLog = {
+          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          email: userFound.email,
+          name: userFound.name,
+          timestamp: Date.now(),
+          action: 'login',
+          details: '일반 사용자 로그인'
+        };
+        setAccessLogs(prev => [userLog, ...prev]);
         
         // Navigation logic
         if (selectedProduct) {
@@ -576,6 +695,17 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     // 새 사용자는 빈 장바구니로 시작
     setCart([]);
     
+    // 회원가입 접속 기록
+    const signupLog: AccessLog = {
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: newUser.email,
+      name: newUser.name,
+      timestamp: Date.now(),
+      action: 'signup',
+      details: '신규 회원가입'
+    };
+    setAccessLogs(prev => [signupLog, ...prev]);
+    
     // Navigate to appropriate view
     if (selectedProduct) {
         setShopView('detail');
@@ -622,17 +752,30 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
   };
 
   const handleLogout = () => {
+    // 로그아웃 접속 기록
+    if (currentUser) {
+      const logoutLog: AccessLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        email: currentUser.email,
+        name: currentUser.name,
+        timestamp: Date.now(),
+        action: 'logout',
+        details: isAdmin ? '관리자 로그아웃' : '일반 사용자 로그아웃'
+      };
+      setAccessLogs(prev => [logoutLog, ...prev]);
+    }
+    
     // 로그아웃 시 장바구니 초기화
     setCart([]);
     setIsLoggedIn(false);
+    const prevUser = currentUser;
     setCurrentUser(null);
     setShowLogoutConfirm(false);
     // Clear user-related localStorage
     localStorage.removeItem('areum_isLoggedIn');
     localStorage.removeItem('areum_currentUser');
     // 장바구니는 사용자별로 저장되어 있으므로 삭제하지 않음 (다시 로그인하면 복원됨)
-    // Optionally redirect to listing
-    // setShopView('listing'); 
+    setShopView('listing');
   };
 
 
@@ -1317,6 +1460,607 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
     </div>
   );
 
+  // 8. Admin Dashboard View
+  const renderAdmin = () => {
+    // Calculate statistics
+    const totalUsers = users.length;
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const pendingOrders = orders.filter(o => o.status === 'pending').length;
+    const pendingCS = csInquiries.filter(cs => cs.status === 'pending').length;
+    
+    // Top clicked products
+    const topClickedProducts = Object.values(productClickStats)
+      .sort((a, b) => b.clickCount - a.clickCount)
+      .slice(0, 10);
+    
+    // Recent access logs (last 50)
+    const recentLogs = accessLogs.slice(0, 50);
+    
+    // Order status breakdown
+    const orderStatusCount = {
+      pending: orders.filter(o => o.status === 'pending').length,
+      processing: orders.filter(o => o.status === 'processing').length,
+      shipped: orders.filter(o => o.status === 'shipped').length,
+      delivered: orders.filter(o => o.status === 'delivered').length,
+      cancelled: orders.filter(o => o.status === 'cancelled').length,
+    };
+
+    return (
+      <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
+        {/* Admin Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-stone-800 mb-2">관리자 대시보드</h1>
+          <p className="text-stone-500">스토어 현황 및 관리</p>
+        </div>
+
+        {/* Admin Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide border-b border-stone-200 pb-2">
+          {[
+            { id: 'dashboard', label: '대시보드', icon: BarChart3 },
+            { id: 'products', label: '상품 관리', icon: Package },
+            { id: 'orders', label: '주문 관리', icon: ClipboardList },
+            { id: 'cs', label: '고객 상담', icon: MessageSquare },
+            { id: 'users', label: '회원 관리', icon: Users },
+            { id: 'analytics', label: '통계 분석', icon: TrendingUp },
+          ].map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setAdminTab(tab.id as any)}
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap transition-all ${
+                  adminTab === tab.id
+                    ? 'bg-stone-800 text-white'
+                    : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
+                }`}
+              >
+                <Icon size={18} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dashboard Tab */}
+        {adminTab === 'dashboard' && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-stone-500 text-sm">총 회원</span>
+                  <Users className="text-orange-500" size={20} />
+                </div>
+                <p className="text-3xl font-bold text-stone-800">{totalUsers}</p>
+                <p className="text-xs text-stone-400 mt-1">등록된 회원 수</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-stone-500 text-sm">총 주문</span>
+                  <ClipboardList className="text-blue-500" size={20} />
+                </div>
+                <p className="text-3xl font-bold text-stone-800">{totalOrders}</p>
+                <p className="text-xs text-stone-400 mt-1">처리 대기: {pendingOrders}건</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-stone-500 text-sm">총 매출</span>
+                  <TrendingUp className="text-green-500" size={20} />
+                </div>
+                <p className="text-3xl font-bold text-stone-800">₩{totalRevenue.toLocaleString()}</p>
+                <p className="text-xs text-stone-400 mt-1">누적 매출액</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-stone-500 text-sm">상담 대기</span>
+                  <MessageSquare className="text-red-500" size={20} />
+                </div>
+                <p className="text-3xl font-bold text-stone-800">{pendingCS}</p>
+                <p className="text-xs text-stone-400 mt-1">응답 대기 문의</p>
+              </div>
+            </div>
+
+            {/* Recent Access Logs */}
+            <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+              <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+                <Activity size={20} />
+                최근 접속 기록
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-stone-200">
+                      <th className="text-left py-3 px-2 text-stone-600 font-medium">시간</th>
+                      <th className="text-left py-3 px-2 text-stone-600 font-medium">이름</th>
+                      <th className="text-left py-3 px-2 text-stone-600 font-medium">이메일</th>
+                      <th className="text-left py-3 px-2 text-stone-600 font-medium">액션</th>
+                      <th className="text-left py-3 px-2 text-stone-600 font-medium">상세</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentLogs.map(log => (
+                      <tr key={log.id} className="border-b border-stone-100 hover:bg-stone-50">
+                        <td className="py-3 px-2 text-stone-600">
+                          {new Date(log.timestamp).toLocaleString('ko-KR')}
+                        </td>
+                        <td className="py-3 px-2 text-stone-800 font-medium">{log.name}</td>
+                        <td className="py-3 px-2 text-stone-600">{log.email}</td>
+                        <td className="py-3 px-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            log.action === 'login' ? 'bg-green-100 text-green-700' :
+                            log.action === 'logout' ? 'bg-gray-100 text-gray-700' :
+                            log.action === 'view_product' ? 'bg-blue-100 text-blue-700' :
+                            log.action === 'add_to_cart' ? 'bg-orange-100 text-orange-700' :
+                            log.action === 'checkout' ? 'bg-purple-100 text-purple-700' :
+                            'bg-stone-100 text-stone-700'
+                          }`}>
+                            {log.action === 'login' ? '로그인' :
+                             log.action === 'logout' ? '로그아웃' :
+                             log.action === 'view_product' ? '상품 조회' :
+                             log.action === 'add_to_cart' ? '장바구니 추가' :
+                             log.action === 'checkout' ? '결제' :
+                             log.action === 'signup' ? '회원가입' : log.action}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-stone-500 text-xs">{log.details || '-'}</td>
+                      </tr>
+                    ))}
+                    {recentLogs.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-stone-400">
+                          접속 기록이 없습니다.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Products Tab - 상품 등록/수정 */}
+        {adminTab === 'products' && (
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+            <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+              <Package size={20} />
+              상품 관리
+            </h2>
+            <p className="text-stone-500 mb-6">총 {products.length}개의 상품이 등록되어 있습니다.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.slice(0, 12).map(product => (
+                <div key={product.id} className="border border-stone-200 rounded-lg p-4">
+                  <div className="aspect-[3/4] bg-stone-100 rounded-lg mb-3 overflow-hidden">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-contain p-2" />
+                  </div>
+                  <p className="text-sm font-bold text-stone-800 mb-1 truncate">{product.name}</p>
+                  <p className="text-xs text-stone-500 mb-2">{product.category} | {product.gender === 'women' ? '여성' : '남성'}</p>
+                  <p className="text-sm font-bold text-orange-600">₩{product.price.toLocaleString()}/일</p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setShopView('detail');
+                      }}
+                      className="flex-1 px-3 py-1.5 bg-stone-800 text-white text-xs rounded hover:bg-stone-900 transition-colors"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => {
+                        setProducts(prev => prev.filter(p => p.id !== product.id));
+                        showToastNotification('상품이 삭제되었습니다.');
+                      }}
+                      className="px-3 py-1.5 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                // 상품 추가 로직 (간단한 예시)
+                const newProduct: Product = {
+                  id: Math.max(...products.map(p => p.id), 0) + 1,
+                  gender: 'women',
+                  category: '전체',
+                  name: `새 상품 ${Date.now()}`,
+                  price: 3000,
+                  originalPrice: 100000,
+                  image: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?auto=format&fit=crop&w=800&q=80',
+                  brand: 'New Brand'
+                };
+                setProducts(prev => [...prev, newProduct]);
+                showToastNotification('새 상품이 추가되었습니다.');
+              }}
+              className="mt-6 px-6 py-3 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-colors"
+            >
+              + 새 상품 추가
+            </button>
+          </div>
+        )}
+
+        {/* Orders Tab - 주문 관리 */}
+        {adminTab === 'orders' && (
+          <div className="space-y-4">
+            {/* Order Status Summary */}
+            <div className="grid grid-cols-5 gap-2">
+              {Object.entries(orderStatusCount).map(([status, count]) => (
+                <div key={status} className="bg-white p-4 rounded-lg border border-stone-200 text-center">
+                  <p className="text-2xl font-bold text-stone-800">{count}</p>
+                  <p className="text-xs text-stone-500 mt-1">
+                    {status === 'pending' ? '대기' :
+                     status === 'processing' ? '처리중' :
+                     status === 'shipped' ? '배송중' :
+                     status === 'delivered' ? '완료' : '취소'}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Orders List */}
+            <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+              <h2 className="text-xl font-bold text-stone-800 mb-4">주문 목록</h2>
+              <div className="space-y-4">
+                {orders.map(order => (
+                  <div key={order.id} className="border border-stone-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <p className="font-bold text-stone-800">주문번호: {order.id}</p>
+                        <p className="text-sm text-stone-500">{order.userName} ({order.userEmail})</p>
+                        <p className="text-xs text-stone-400 mt-1">
+                          {new Date(order.orderDate).toLocaleString('ko-KR')}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                          order.status === 'shipped' ? 'bg-purple-100 text-purple-700' :
+                          order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {order.status === 'pending' ? '대기' :
+                           order.status === 'processing' ? '처리중' :
+                           order.status === 'shipped' ? '배송중' :
+                           order.status === 'delivered' ? '완료' : '취소'}
+                        </span>
+                        <p className="text-lg font-bold text-orange-600 mt-2">₩{order.totalAmount.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-stone-100 pt-3 mt-3">
+                      <p className="text-sm text-stone-600 mb-2">주문 상품 ({order.items.length}개)</p>
+                      <div className="flex gap-2 mb-3">
+                        {order.items.slice(0, 3).map((item, idx) => (
+                          <div key={idx} className="w-16 h-16 bg-stone-100 rounded overflow-hidden">
+                            <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+                          </div>
+                        ))}
+                        {order.items.length > 3 && (
+                          <div className="w-16 h-16 bg-stone-200 rounded flex items-center justify-center text-xs text-stone-500">
+                            +{order.items.length - 3}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-stone-500">
+                        배송지: {order.shippingInfo.address} {order.shippingInfo.detailAddress}
+                      </p>
+                      <div className="flex gap-2 mt-3">
+                        {order.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setOrders(prev => prev.map(o => 
+                                  o.id === order.id ? { ...o, status: 'processing' } : o
+                                ));
+                                showToastNotification('주문 상태가 변경되었습니다.');
+                              }}
+                              className="px-4 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                            >
+                              처리 시작
+                            </button>
+                            <button
+                              onClick={() => {
+                                setOrders(prev => prev.map(o => 
+                                  o.id === order.id ? { ...o, status: 'cancelled' } : o
+                                ));
+                                showToastNotification('주문이 취소되었습니다.');
+                              }}
+                              className="px-4 py-1.5 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                            >
+                              취소
+                            </button>
+                          </>
+                        )}
+                        {order.status === 'processing' && (
+                          <button
+                            onClick={() => {
+                              setOrders(prev => prev.map(o => 
+                                o.id === order.id ? { ...o, status: 'shipped' } : o
+                              ));
+                              showToastNotification('배송 상태로 변경되었습니다.');
+                            }}
+                            className="px-4 py-1.5 bg-purple-500 text-white text-sm rounded hover:bg-purple-600 transition-colors"
+                          >
+                            배송 시작
+                          </button>
+                        )}
+                        {order.status === 'shipped' && (
+                          <button
+                            onClick={() => {
+                              setOrders(prev => prev.map(o => 
+                                o.id === order.id ? { ...o, status: 'delivered' } : o
+                              ));
+                              showToastNotification('배송 완료 처리되었습니다.');
+                            }}
+                            className="px-4 py-1.5 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
+                          >
+                            배송 완료
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {orders.length === 0 && (
+                  <div className="text-center py-12 text-stone-400">
+                    주문 내역이 없습니다.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CS Tab - 고객 상담 */}
+        {adminTab === 'cs' && (
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+            <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+              <MessageSquare size={20} />
+              고객 상담 관리
+            </h2>
+            <p className="text-stone-500 mb-6">
+              대기 중인 문의: {csInquiries.filter(cs => cs.status === 'pending').length}건
+            </p>
+            <div className="space-y-4">
+              {csInquiries.map(inquiry => (
+                <div key={inquiry.id} className="border border-stone-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <p className="font-bold text-stone-800">{inquiry.subject}</p>
+                      <p className="text-sm text-stone-500">{inquiry.userName} ({inquiry.userEmail})</p>
+                      <p className="text-xs text-stone-400 mt-1">
+                        {new Date(inquiry.timestamp).toLocaleString('ko-KR')}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      inquiry.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      inquiry.status === 'answered' ? 'bg-green-100 text-green-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {inquiry.status === 'pending' ? '대기' :
+                       inquiry.status === 'answered' ? '답변완료' : '종료'}
+                    </span>
+                  </div>
+                  <div className="bg-stone-50 p-3 rounded mb-3">
+                    <p className="text-sm text-stone-700 whitespace-pre-wrap">{inquiry.message}</p>
+                  </div>
+                  {inquiry.response && (
+                    <div className="bg-orange-50 p-3 rounded mb-3 border-l-4 border-orange-500">
+                      <p className="text-xs font-bold text-orange-700 mb-1">관리자 답변:</p>
+                      <p className="text-sm text-stone-700 whitespace-pre-wrap">{inquiry.response}</p>
+                    </div>
+                  )}
+                  {inquiry.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="답변을 입력하세요..."
+                        className="flex-1 px-3 py-2 border border-stone-200 rounded text-sm"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                            setCsInquiries(prev => prev.map(cs =>
+                              cs.id === inquiry.id 
+                                ? { ...cs, response: e.currentTarget.value, status: 'answered' as const }
+                                : cs
+                            ));
+                            e.currentTarget.value = '';
+                            showToastNotification('답변이 등록되었습니다.');
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          if (input.value.trim()) {
+                            setCsInquiries(prev => prev.map(cs =>
+                              cs.id === inquiry.id 
+                                ? { ...cs, response: input.value, status: 'answered' as const }
+                                : cs
+                            ));
+                            input.value = '';
+                            showToastNotification('답변이 등록되었습니다.');
+                          }
+                        }}
+                        className="px-4 py-2 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 transition-colors"
+                      >
+                        답변
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {csInquiries.length === 0 && (
+                <div className="text-center py-12 text-stone-400">
+                  상담 문의가 없습니다.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab - 회원 관리 */}
+        {adminTab === 'users' && (
+          <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+            <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+              <Users size={20} />
+              회원 관리
+            </h2>
+            <p className="text-stone-500 mb-6">총 {users.length}명의 회원</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-stone-200">
+                    <th className="text-left py-3 px-4 text-stone-600 font-medium">이름</th>
+                    <th className="text-left py-3 px-4 text-stone-600 font-medium">이메일</th>
+                    <th className="text-left py-3 px-4 text-stone-600 font-medium">연락처</th>
+                    <th className="text-left py-3 px-4 text-stone-600 font-medium">주소</th>
+                    <th className="text-left py-3 px-4 text-stone-600 font-medium">주문 수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(user => {
+                    const userOrders = orders.filter(o => o.userEmail === user.email);
+                    return (
+                      <tr key={user.email} className="border-b border-stone-100 hover:bg-stone-50">
+                        <td className="py-3 px-4 text-stone-800 font-medium">{user.name}</td>
+                        <td className="py-3 px-4 text-stone-600">{user.email}</td>
+                        <td className="py-3 px-4 text-stone-600">{user.phone}</td>
+                        <td className="py-3 px-4 text-stone-500 text-xs">{user.address}</td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                            {userOrders.length}건
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-stone-400">
+                        등록된 회원이 없습니다.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab - 통계 분석 */}
+        {adminTab === 'analytics' && (
+          <div className="space-y-6">
+            {/* Top Clicked Products */}
+            <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+              <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+                <TrendingUp size={20} />
+                인기 상품 (클릭 수 기준)
+              </h2>
+              {topClickedProducts.length > 0 ? (
+                <div className="space-y-3">
+                  {topClickedProducts.map((stat, idx) => {
+                    const maxClicks = topClickedProducts[0]?.clickCount || 1;
+                    const percentage = (stat.clickCount / maxClicks) * 100;
+                    return (
+                      <div key={stat.productId}>
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-stone-800">
+                              {idx + 1}. {stat.productName}
+                            </p>
+                            <p className="text-xs text-stone-500">
+                              마지막 클릭: {new Date(stat.lastClicked).toLocaleString('ko-KR')}
+                            </p>
+                          </div>
+                          <span className="text-lg font-bold text-orange-600 ml-4">
+                            {stat.clickCount}회
+                          </span>
+                        </div>
+                        <div className="w-full bg-stone-100 rounded-full h-3 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-orange-400 to-orange-600 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-stone-400">
+                  상품 클릭 데이터가 없습니다.
+                </div>
+              )}
+            </div>
+
+            {/* Order Status Chart (Simple Bar Chart) */}
+            <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+              <h2 className="text-xl font-bold text-stone-800 mb-4">주문 상태 분포</h2>
+              <div className="space-y-4">
+                {Object.entries(orderStatusCount).map(([status, count]) => {
+                  const maxCount = Math.max(...Object.values(orderStatusCount), 1);
+                  const percentage = (count / maxCount) * 100;
+                  return (
+                    <div key={status}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-stone-700">
+                          {status === 'pending' ? '대기' :
+                           status === 'processing' ? '처리중' :
+                           status === 'shipped' ? '배송중' :
+                           status === 'delivered' ? '완료' : '취소'}
+                        </span>
+                        <span className="text-sm font-bold text-stone-800">{count}건</span>
+                      </div>
+                      <div className="w-full bg-stone-100 rounded-full h-4 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            status === 'pending' ? 'bg-yellow-400' :
+                            status === 'processing' ? 'bg-blue-400' :
+                            status === 'shipped' ? 'bg-purple-400' :
+                            status === 'delivered' ? 'bg-green-400' :
+                            'bg-red-400'
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Revenue Chart */}
+            <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+              <h2 className="text-xl font-bold text-stone-800 mb-4">매출 현황</h2>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-stone-50 rounded-lg">
+                  <p className="text-2xl font-bold text-green-600">₩{totalRevenue.toLocaleString()}</p>
+                  <p className="text-xs text-stone-500 mt-1">총 매출</p>
+                </div>
+                <div className="text-center p-4 bg-stone-50 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-600">{totalOrders}</p>
+                  <p className="text-xs text-stone-500 mt-1">총 주문</p>
+                </div>
+                <div className="text-center p-4 bg-stone-50 rounded-lg">
+                  <p className="text-2xl font-bold text-orange-600">
+                    ₩{totalOrders > 0 ? Math.round(totalRevenue / totalOrders).toLocaleString() : 0}
+                  </p>
+                  <p className="text-xs text-stone-500 mt-1">평균 주문액</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 pb-20 relative">
@@ -1352,12 +2096,7 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                         취소
                     </button>
                     <button 
-                        onClick={() => {
-                            setIsLoggedIn(false);
-                            setCurrentUser(null);
-                            setShowLogoutConfirm(false);
-                            setShopView('listing');
-                        }}
+                        onClick={handleLogout}
                         className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors"
                     >
                         로그아웃
@@ -1367,13 +2106,92 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
         </div>
       )}
 
+      {/* CS Inquiry Modal */}
+      {showCSModal && isLoggedIn && currentUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowCSModal(false)}></div>
+          <div className="relative bg-white border border-stone-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl transform animate-in fade-in zoom-in duration-200">
+            <h3 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+              <MessageSquare size={20} />
+              고객 상담 문의
+            </h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!csForm.subject.trim() || !csForm.message.trim()) {
+                showToastNotification('제목과 내용을 모두 입력해주세요.');
+                return;
+              }
+              const newInquiry: CSInquiry = {
+                id: `cs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                userId: currentUser.email,
+                userEmail: currentUser.email,
+                userName: currentUser.name,
+                subject: csForm.subject,
+                message: csForm.message,
+                timestamp: Date.now(),
+                status: 'pending'
+              };
+              setCsInquiries(prev => [newInquiry, ...prev]);
+              setCsForm({ subject: '', message: '' });
+              setShowCSModal(false);
+              showToastNotification('상담 문의가 등록되었습니다.');
+            }}>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-stone-500 mb-1">제목</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="문의 제목을 입력하세요"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-stone-800 focus:outline-none focus:border-orange-400 transition-colors"
+                    value={csForm.subject}
+                    onChange={(e) => setCsForm({ ...csForm, subject: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-stone-500 mb-1">내용</label>
+                  <textarea
+                    required
+                    rows={6}
+                    placeholder="문의 내용을 입력하세요"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-stone-800 focus:outline-none focus:border-orange-400 transition-colors resize-none"
+                    value={csForm.message}
+                    onChange={(e) => setCsForm({ ...csForm, message: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCSModal(false);
+                    setCsForm({ subject: '', message: '' });
+                  }}
+                  className="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl font-medium transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition-colors"
+                >
+                  문의하기
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#FDFBF7]/95 backdrop-blur-md border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
                 onClick={() => {
-                    if (shopView === 'listing') onBack();
+                    if (shopView === 'admin') {
+                        setShopView('listing');
+                    } else if (shopView === 'listing') onBack();
                     else if (shopView === 'login' || shopView === 'signup') {
                         if(selectedProduct) setShopView('detail');
                         else setShopView('listing');
@@ -1402,6 +2220,26 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                             <span className="text-xs text-stone-500">
                                 <span className="text-stone-800 font-bold">{currentUser?.name}</span>님
                             </span>
+                            {isAdmin && shopView !== 'admin' && (
+                                <button 
+                                    onClick={() => {
+                                        setShopView('admin');
+                                        setAdminTab('dashboard');
+                                    }} 
+                                    className="text-xs text-orange-500 hover:text-orange-600 font-bold px-2 py-1 flex items-center gap-1 border border-orange-300 rounded px-3 py-1.5"
+                                >
+                                    <BarChart3 size={12} />
+                                    관리자
+                                </button>
+                            )}
+                            {isAdmin && shopView === 'admin' && (
+                                <button 
+                                    onClick={() => setShopView('listing')} 
+                                    className="text-xs text-stone-600 hover:text-stone-800 px-2 py-1"
+                                >
+                                    스토어
+                                </button>
+                            )}
                             <button onClick={() => setShowLogoutConfirm(true)} className="text-xs text-stone-400 hover:text-stone-800 px-2 py-1 flex items-center gap-1">
                                 <LogOut size={12} />
                                 로그아웃
@@ -1438,6 +2276,16 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                 )}
             </div>
 
+            {isLoggedIn && !isAdmin && (
+              <button 
+                  onClick={() => setShowCSModal(true)}
+                  className="p-2 hover:text-stone-800 transition-colors"
+                  title="고객 상담"
+              >
+                  <MessageSquare size={24} />
+              </button>
+            )}
+            
             <button 
                 onClick={() => setShopView('cart')}
                 className="p-2 hover:text-stone-800 transition-colors relative"
@@ -1461,6 +2309,7 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
         {shopView === 'success' && renderSuccess()}
         {shopView === 'login' && renderLogin()}
         {shopView === 'signup' && renderSignUp()}
+        {shopView === 'admin' && isAdmin && renderAdmin()}
       </main>
     </div>
   );
