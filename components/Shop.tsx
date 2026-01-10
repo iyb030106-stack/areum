@@ -1512,36 +1512,92 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
 
   // 8. Admin Dashboard View
   const renderAdmin = () => {
-    // Calculate statistics
-    const totalUsers = users.length;
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-    const pendingOrders = orders.filter(o => o.status === 'pending').length;
+    const ADMIN_EMAIL = 'areum1004@gmail.com';
+    
+    // Filter out admin data from all statistics
+    const nonAdminUsers = users.filter(u => u.email !== ADMIN_EMAIL);
+    const nonAdminOrders = orders.filter(o => o.userEmail !== ADMIN_EMAIL);
+    const nonAdminAccessLogs = accessLogs.filter(log => log.email !== ADMIN_EMAIL);
+    
+    // Calculate statistics (excluding admin)
+    const totalUsers = nonAdminUsers.length;
+    const totalOrders = nonAdminOrders.length;
+    const totalRevenue = nonAdminOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const pendingOrders = nonAdminOrders.filter(o => o.status === 'pending').length;
     const pendingCS = csInquiries.filter(cs => cs.status === 'pending').length;
     
-    // Top clicked products
+    // Top clicked products (excluding admin clicks)
     const topClickedProducts = Object.values(productClickStats)
       .sort((a, b) => b.clickCount - a.clickCount)
       .slice(0, 10);
     
-    // Recent access logs (last 50)
-    const recentLogs = accessLogs.slice(0, 50);
+    // Recent access logs (last 50, excluding admin)
+    const recentLogs = nonAdminAccessLogs.slice(0, 50);
     
-    // Order status breakdown
+    // Order status breakdown (excluding admin)
     const orderStatusCount = {
-      pending: orders.filter(o => o.status === 'pending').length,
-      processing: orders.filter(o => o.status === 'processing').length,
-      shipped: orders.filter(o => o.status === 'shipped').length,
-      delivered: orders.filter(o => o.status === 'delivered').length,
-      cancelled: orders.filter(o => o.status === 'cancelled').length,
+      pending: nonAdminOrders.filter(o => o.status === 'pending').length,
+      processing: nonAdminOrders.filter(o => o.status === 'processing').length,
+      shipped: nonAdminOrders.filter(o => o.status === 'shipped').length,
+      delivered: nonAdminOrders.filter(o => o.status === 'delivered').length,
+      cancelled: nonAdminOrders.filter(o => o.status === 'cancelled').length,
     };
 
     return (
       <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
         {/* Admin Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-stone-800 mb-2">관리자 대시보드</h1>
-          <p className="text-stone-500">스토어 현황 및 관리</p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-stone-800 mb-2">관리자 대시보드</h1>
+            <p className="text-stone-500">스토어 현황 및 관리</p>
+          </div>
+          <button
+            onClick={() => {
+              if (confirm('⚠️ 경고: 모든 데이터를 초기화하시겠습니까?\n\n초기화될 데이터:\n- 접속 기록\n- 상품 클릭 통계\n- CS 문의\n- 주문 기록\n- 회원 데이터 (관리자 제외)\n- 장바구니\n\n이 작업은 되돌릴 수 없습니다.')) {
+                if (confirm('정말로 모든 데이터를 초기화하시겠습니까?\n\n마지막 확인입니다.')) {
+                  // 접속 기록 초기화
+                  setAccessLogs([]);
+                  localStorage.removeItem('areum_accessLogs');
+                  
+                  // 상품 클릭 통계 초기화
+                  setProductClickStats({});
+                  localStorage.removeItem('areum_productClickStats');
+                  
+                  // CS 문의 초기화
+                  setCsInquiries([]);
+                  localStorage.removeItem('areum_csInquiries');
+                  
+                  // 주문 기록 초기화
+                  setOrders([]);
+                  localStorage.removeItem('areum_orders');
+                  
+                  // 회원 데이터 초기화 (관리자만 유지)
+                  const adminUser = users.find(u => u.email === ADMIN_EMAIL);
+                  if (adminUser) {
+                    setUsers([adminUser]);
+                    localStorage.setItem('areum_users', JSON.stringify([adminUser]));
+                  } else {
+                    setUsers([]);
+                    localStorage.removeItem('areum_users');
+                  }
+                  
+                  // 장바구니 초기화
+                  setCart([]);
+                  localStorage.removeItem('areum_cart');
+                  
+                  // 찜 목록 초기화
+                  setWishlist([]);
+                  localStorage.removeItem('areum_wishlist');
+                  
+                  showToastNotification('모든 데이터가 초기화되었습니다.');
+                }
+              }
+            }}
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <X size={18} />
+            데이터 초기화
+          </button>
         </div>
 
         {/* Admin Tabs */}
@@ -1616,10 +1672,13 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
 
             {/* Recent Access Logs */}
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-              <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
-                <Activity size={20} />
-                최근 접속 기록
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+                  <Activity size={20} />
+                  최근 접속 기록
+                </h2>
+                <span className="text-xs text-stone-400">(관리자 미포함)</span>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -1861,9 +1920,12 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
 
             {/* Orders List */}
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-              <h2 className="text-xl font-bold text-stone-800 mb-4">주문 목록</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-stone-800">주문 목록</h2>
+                <span className="text-xs text-stone-400">(관리자 미포함)</span>
+              </div>
               <div className="space-y-4">
-                {orders.map(order => (
+                {nonAdminOrders.map(order => (
                   <div key={order.id} className="border border-stone-200 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -2063,11 +2125,14 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
         {/* Users Tab - 회원 관리 */}
         {adminTab === 'users' && (
           <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-            <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
-              <Users size={20} />
-              회원 관리
-            </h2>
-            <p className="text-stone-500 mb-6">총 {users.length}명의 회원</p>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+                <Users size={20} />
+                회원 관리
+              </h2>
+              <span className="text-xs text-stone-400">(관리자 미포함)</span>
+            </div>
+            <p className="text-stone-500 mb-6">총 {nonAdminUsers.length}명의 회원</p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -2080,8 +2145,8 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(user => {
-                    const userOrders = orders.filter(o => o.userEmail === user.email);
+                  {nonAdminUsers.map(user => {
+                    const userOrders = nonAdminOrders.filter(o => o.userEmail === user.email);
                     return (
                       <tr key={user.email} className="border-b border-stone-100 hover:bg-stone-50">
                         <td className="py-3 px-4 text-stone-800 font-medium">{user.name}</td>
@@ -2096,7 +2161,7 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
                       </tr>
                     );
                   })}
-                  {users.length === 0 && (
+                  {nonAdminUsers.length === 0 && (
                     <tr>
                       <td colSpan={5} className="py-8 text-center text-stone-400">
                         등록된 회원이 없습니다.
@@ -2114,10 +2179,13 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
           <div className="space-y-6">
             {/* Top Clicked Products */}
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-              <h2 className="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
-                <TrendingUp size={20} />
-                인기 상품 (클릭 수 기준)
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+                  <TrendingUp size={20} />
+                  인기 상품 (클릭 수 기준)
+                </h2>
+                <span className="text-xs text-stone-400">(관리자 미포함)</span>
+              </div>
               {topClickedProducts.length > 0 ? (
                 <div className="space-y-3">
                   {topClickedProducts.map((stat, idx) => {
@@ -2157,7 +2225,10 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
 
             {/* Order Status Chart (Simple Bar Chart) */}
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-              <h2 className="text-xl font-bold text-stone-800 mb-4">주문 상태 분포</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-stone-800">주문 상태 분포</h2>
+                <span className="text-xs text-stone-400">(관리자 미포함)</span>
+              </div>
               <div className="space-y-4">
                 {Object.entries(orderStatusCount).map(([status, count]) => {
                   const maxCount = Math.max(...Object.values(orderStatusCount), 1);
@@ -2193,15 +2264,18 @@ const Shop: React.FC<ShopProps> = ({ onBack }) => {
 
             {/* Revenue Chart */}
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-              <h2 className="text-xl font-bold text-stone-800 mb-4">매출 현황</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-stone-800">매출 현황</h2>
+                <span className="text-xs text-stone-400">(관리자 미포함)</span>
+              </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-stone-50 rounded-lg">
                   <p className="text-2xl font-bold text-green-600">₩{totalRevenue.toLocaleString()}</p>
-                  <p className="text-xs text-stone-500 mt-1">총 매출</p>
+                  <p className="text-xs text-stone-500 mt-1">총 매출 (관리자 미포함)</p>
                 </div>
                 <div className="text-center p-4 bg-stone-50 rounded-lg">
                   <p className="text-2xl font-bold text-blue-600">{totalOrders}</p>
-                  <p className="text-xs text-stone-500 mt-1">총 주문</p>
+                  <p className="text-xs text-stone-500 mt-1">총 주문 (관리자 미포함)</p>
                 </div>
                 <div className="text-center p-4 bg-stone-50 rounded-lg">
                   <p className="text-2xl font-bold text-orange-600">
