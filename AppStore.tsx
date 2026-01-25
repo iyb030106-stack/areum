@@ -9,6 +9,59 @@ type DashboardMetric = {
   delta: string;
 };
 
+// --- Helper components for interactive stats ---
+function MetricCard({ metric }: { metric: DashboardMetric }) {
+  const [displayValue, setDisplayValue] = useState(0);
+  const target = metric.value;
+
+  React.useEffect(() => {
+    const duration = 1600;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.floor(easeOut * target));
+
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+  }, [target]);
+
+  return (
+    <div className="group rounded-2xl border border-white/10 bg-[#1A1A1A]/60 p-5 transition-transform hover:scale-[1.02] hover:border-[#C59A6D]/30">
+      <p className="text-xs font-semibold text-stone-200/70">{metric.label}</p>
+      <div className="mt-3 flex items-end justify-between">
+        <p className="text-2xl font-bold text-stone-50 sm:text-3xl">
+          {displayValue}
+          <span className="ml-1 text-sm font-semibold text-stone-200/70 sm:text-base">{metric.unit}</span>
+        </p>
+        <p className="text-xs font-semibold text-[#C59A6D]">{metric.delta}</p>
+      </div>
+    </div>
+  );
+}
+
+function InteractiveBar({ label, value }: { label: string; value: number }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div className="flex-1">
+      <div className="h-44 rounded-2xl bg-white/5 p-2 flex items-end">
+        <div
+          className="w-full rounded-xl bg-gradient-to-t from-[#C59A6D] to-[#D4AF37] transition-all duration-500 ease-out"
+          style={{ height: hovered ? `${Math.min(value + 8, 100)}%` : `${value}%` }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        />
+      </div>
+      <p className="mt-3 text-center text-xs font-semibold text-stone-200/70">{label}</p>
+    </div>
+  );
+}
+
 const AppStore: React.FC = () => {
   const [brandName, setBrandName] = useState('');
   const [managerName, setManagerName] = useState('');
@@ -135,14 +188,14 @@ const AppStore: React.FC = () => {
                 <span>Premium brand partnership</span>
               </div>
 
-              <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-stone-50 md:text-5xl">
+              <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight text-stone-50 sm:text-4xl md:text-5xl">
                 당신의 브랜드, 다음 세대의 일상이 되다
               </h1>
-              <p className="mt-5 text-lg font-semibold text-[#D4AF37]">
+              <p className="mt-4 text-base font-semibold text-[#D4AF37] sm:text-lg">
                 재고를 넘어 자산으로, 단순 노출을 넘어 데이터 인사이트로.
               </p>
 
-              <p className="mt-6 max-w-xl text-sm leading-relaxed text-stone-200/80">
+              <p className="mt-5 max-w-xl text-sm leading-relaxed text-stone-200/80 sm:text-base">
                 아름은 브랜드의 미학을 대학생의 일상 속으로 가장 깊숙이 전달합니다. 단순히 옷을 빌려주는 것을 넘어,
                 실착 고객의 체형 데이터와 핏 만족도, 그리고 실제 구매 전환으로 이어지는 프리미엄 데이터를 경험하세요.
               </p>
@@ -150,14 +203,14 @@ const AppStore: React.FC = () => {
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   onClick={scrollToForm}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-6 py-3 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] transition-colors"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] transition-colors sm:px-6 sm:py-3 sm:text-sm"
                 >
                   파트너 시작하기
                   <ArrowRight size={16} />
                 </button>
                 <a
                   href="#data-preview"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-stone-50 hover:border-[#C59A6D]/60 hover:text-[#D4AF37] transition-colors"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-stone-50 hover:border-[#C59A6D]/60 hover:text-[#D4AF37] transition-colors sm:px-6 sm:py-3 sm:text-sm"
                 >
                   데이터 미리보기
                 </a>
@@ -168,7 +221,7 @@ const AppStore: React.FC = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold tracking-[0.22em] text-[#C59A6D]">PARTNER SNAPSHOT</p>
-                  <h2 className="mt-3 text-2xl font-bold text-stone-50">브랜드 경험을 숫자로 설계하세요</h2>
+                  <h2 className="mt-3 text-xl font-bold text-stone-50 md:text-2xl">브랜드 경험을 숫자로 설계하세요</h2>
                   <p className="mt-3 text-sm text-stone-200/80">
                     체형·핏·반응 데이터를 한 번에 확인하고 다음 컬렉션 전략을 더 빠르게 결정합니다.
                   </p>
@@ -180,16 +233,7 @@ const AppStore: React.FC = () => {
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {metrics.map((m) => (
-                  <div key={m.label} className="rounded-2xl border border-white/10 bg-[#1A1A1A]/60 p-5">
-                    <p className="text-xs font-semibold text-stone-200/70">{m.label}</p>
-                    <div className="mt-3 flex items-end justify-between">
-                      <p className="text-3xl font-bold text-stone-50">
-                        {m.value}
-                        <span className="ml-1 text-base font-semibold text-stone-200/70">{m.unit}</span>
-                      </p>
-                      <p className="text-xs font-semibold text-[#C59A6D]">{m.delta}</p>
-                    </div>
-                  </div>
+                  <MetricCard key={m.label} metric={m} />
                 ))}
               </div>
             </div>
@@ -202,7 +246,7 @@ const AppStore: React.FC = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
                 <TrendingUp size={18} />
               </div>
-              <h3 className="mt-5 text-lg font-bold text-stone-50">데이터 기반 고객 인사이트</h3>
+              <h3 className="mt-5 text-base font-bold text-stone-50 sm:text-lg">데이터 기반 고객 인사이트</h3>
               <p className="mt-3 text-sm leading-relaxed text-stone-200/80">
                 실착 고객의 체형·핏 만족도와 반응 지표를 빠르게 수집해, 다음 상품 기획을 정교하게 만듭니다.
               </p>
@@ -211,7 +255,7 @@ const AppStore: React.FC = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
                 <CheckCircle2 size={18} />
               </div>
-              <h3 className="mt-5 text-lg font-bold text-stone-50">새로운 구매 전환 기회</h3>
+              <h3 className="mt-5 text-base font-bold text-stone-50 sm:text-lg">새로운 구매 전환 기회</h3>
               <p className="mt-3 text-sm leading-relaxed text-stone-200/80">
                 대여 후 구매로 이어지는 전환 데이터를 제공해, 판매 전략과 프로모션을 더욱 효과적으로 설계합니다.
               </p>
@@ -220,7 +264,7 @@ const AppStore: React.FC = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
                 <Crown size={18} />
               </div>
-              <h3 className="mt-5 text-lg font-bold text-stone-50">브랜드 홍보 효과</h3>
+              <h3 className="mt-5 text-base font-bold text-stone-50 sm:text-lg">브랜드 홍보 효과</h3>
               <p className="mt-3 text-sm leading-relaxed text-stone-200/80">
                 대학생 라이프스타일 속에서 자연스럽게 노출되고, 재대여를 통해 반복적으로 브랜드 경험이 축적됩니다.
               </p>
@@ -233,7 +277,7 @@ const AppStore: React.FC = () => {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold tracking-[0.22em] text-[#C59A6D]">DATA PREVIEW</p>
-                <h2 className="mt-4 text-2xl font-bold text-stone-50">데이터, 그 이상의 가치</h2>
+                <h2 className="mt-4 text-xl font-bold text-stone-50 md:text-2xl">데이터, 그 이상의 가치</h2>
                 <p className="mt-3 max-w-xl text-sm text-stone-200/80">
                   연령대별 선호도, 재대여율, 구매 전환율 등 주요 지표를 한 화면에서 확인할 수 있는 대시보드를 제공합니다.
                 </p>
@@ -251,15 +295,7 @@ const AppStore: React.FC = () => {
                 </div>
                 <div className="mt-6 flex items-end gap-3">
                   {bars.map((b) => (
-                    <div key={b.label} className="flex-1">
-                      <div className="h-44 rounded-2xl bg-white/5 p-2 flex items-end">
-                        <div
-                          className="w-full rounded-xl bg-gradient-to-t from-[#C59A6D] to-[#D4AF37]"
-                          style={{ height: `${b.value}%` }}
-                        />
-                      </div>
-                      <p className="mt-3 text-center text-xs font-semibold text-stone-200/70">{b.label}</p>
-                    </div>
+                    <InteractiveBar key={b.label} label={b.label} value={b.value} />
                   ))}
                 </div>
               </div>
@@ -268,16 +304,7 @@ const AppStore: React.FC = () => {
                 <p className="text-sm font-semibold text-stone-50">핵심 지표</p>
                 <div className="mt-6 space-y-4">
                   {metrics.slice(0, 3).map((m) => (
-                    <div key={m.label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-stone-200/70">{m.label}</p>
-                        <p className="text-xs font-semibold text-[#C59A6D]">{m.delta}</p>
-                      </div>
-                      <p className="mt-3 text-2xl font-bold text-stone-50">
-                        {m.value}
-                        <span className="ml-1 text-sm font-semibold text-stone-200/60">{m.unit}</span>
-                      </p>
-                    </div>
+                    <MetricCard key={m.label} metric={m} />
                   ))}
                 </div>
               </div>
@@ -290,7 +317,7 @@ const AppStore: React.FC = () => {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold tracking-[0.22em] text-[#C59A6D]">CALL TO ACTION</p>
-                <h2 className="mt-4 text-2xl font-bold text-stone-50">파트너 문의</h2>
+                <h2 className="mt-4 text-xl font-bold text-stone-50 md:text-2xl">파트너 문의</h2>
                 <p className="mt-3 text-sm text-stone-200/80">아래 폼을 남겨주시면 24시간 내 연락드립니다.</p>
               </div>
               <div className="text-xs font-semibold text-stone-200/60">저장: Supabase brand_applications</div>
@@ -360,7 +387,7 @@ const AppStore: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#D4AF37] px-6 py-4 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                className="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-4 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] disabled:opacity-60 disabled:cursor-not-allowed transition-colors sm:px-6 sm:py-4 sm:text-sm"
               >
                 <span>{submitting ? '전송 중...' : '입점 문의 제출'}</span>
                 <ArrowRight size={16} />
@@ -401,7 +428,7 @@ const AppStore: React.FC = () => {
             <div className="mt-8 flex justify-end">
               <button
                 onClick={() => setSuccessOpen(false)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] transition-colors"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] transition-colors sm:px-5 sm:py-3 sm:text-sm"
               >
                 확인
                 <ArrowRight size={16} />
