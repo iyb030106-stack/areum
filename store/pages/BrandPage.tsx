@@ -2,6 +2,43 @@ import React, { useMemo, useState } from 'react';
 import { BarChart3, CheckCircle2, Handshake, MessageSquareText, Phone, Store, Users } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
+const formatUnknownError = (err: unknown) => {
+  if (err instanceof Error) {
+    return err.message;
+  }
+
+  if (typeof err === 'string') {
+    return err;
+  }
+
+  if (err && typeof err === 'object') {
+    const anyErr = err as Record<string, unknown>;
+    const message = typeof anyErr.message === 'string' ? anyErr.message : undefined;
+    const code = typeof anyErr.code === 'string' ? anyErr.code : undefined;
+    const details = typeof anyErr.details === 'string' ? anyErr.details : undefined;
+    const hint = typeof anyErr.hint === 'string' ? anyErr.hint : undefined;
+
+    const parts = [
+      message,
+      code ? `code: ${code}` : undefined,
+      details ? `details: ${details}` : undefined,
+      hint ? `hint: ${hint}` : undefined,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join('\n');
+    }
+
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return 'Unknown error object';
+    }
+  }
+
+  return 'Unknown error';
+};
+
 const BrandPage: React.FC = () => {
   const [brandName, setBrandName] = useState('');
   const [contact, setContact] = useState('');
@@ -45,7 +82,8 @@ const BrandPage: React.FC = () => {
 
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '신청 처리 중 오류가 발생했습니다.');
+      console.error('Brand application submit failed:', err);
+      setError(formatUnknownError(err));
     } finally {
       setSubmitting(false);
     }
