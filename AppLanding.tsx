@@ -24,7 +24,23 @@ const AppLanding: React.FC = () => {
   const closeNotify = () => setIsNotifyOpen(false);
 
   const handleStartClick = () => {
-    openNotify();
+    const envStoreUrl = import.meta.env.VITE_STORE_URL as string | undefined;
+    const currentHost = window.location.host;
+    const currentProtocol = window.location.protocol;
+
+    let storeUrl = envStoreUrl;
+
+    if (!storeUrl) {
+      if (currentHost.includes('localhost') || currentHost.includes('127.0.0.1')) {
+        storeUrl = `${currentProtocol}//localhost:3001`;
+      } else if (currentHost.includes('vercel.app')) {
+        storeUrl = 'https://areum-store.vercel.app';
+      } else {
+        storeUrl = `${currentProtocol}//areum-store.vercel.app`;
+      }
+    }
+
+    window.location.href = storeUrl;
   };
 
   return (

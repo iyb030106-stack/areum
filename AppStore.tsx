@@ -1,76 +1,22 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import StoreLayout from './store/components/StoreLayout';
+import BrandPage from './store/pages/BrandPage';
+import ProductDetail from './store/pages/ProductDetail';
+import StoreHome from './store/pages/StoreHome';
 
 const AppStore: React.FC = () => {
-  const handleBack = () => {
-    // 랜딩페이지 도메인으로 리다이렉트
-    // 1. 환경 변수에서 가져오기 (Vercel에서 설정)
-    // 2. 없으면 현재 도메인 기반으로 랜딩페이지 도메인 자동 생성
-    // 3. 최종 기본값 사용
-    const envLandingUrl = import.meta.env.VITE_LANDING_URL;
-    
-    let landingUrl = envLandingUrl;
-    
-    if (!landingUrl) {
-      // 현재 도메인 기반으로 랜딩페이지 도메인 생성
-      const currentHost = window.location.host;
-      const currentProtocol = window.location.protocol;
-      
-      // localhost나 IP 주소인 경우
-      if (currentHost.includes('localhost') || currentHost.includes('127.0.0.1') || currentHost.match(/^\d+\.\d+\.\d+\.\d+/)) {
-        // 개발 환경: 포트 3000으로 이동
-        landingUrl = `${currentProtocol}//${currentHost.replace(':3001', ':3000')}`;
-      } else {
-        // 프로덕션 환경: store 제거하여 랜딩페이지 도메인 생성
-        // store.areum.com -> areum.com
-        // areum-store.vercel.app -> areum-landing.vercel.app
-        if (currentHost.includes('vercel.app')) {
-          landingUrl = currentHost.replace('store', 'landing');
-          if (landingUrl === currentHost) {
-            // store가 없는 경우 landing으로 변경
-            landingUrl = currentHost.replace('-store.vercel.app', '-landing.vercel.app');
-          }
-          landingUrl = `${currentProtocol}//${landingUrl}`;
-        } else if (currentHost.startsWith('store.')) {
-          // store.도메인 -> 도메인 (메인 도메인)
-          landingUrl = `${currentProtocol}//${currentHost.replace('store.', '')}`;
-        } else {
-          // store가 포함된 경우 제거
-          landingUrl = `${currentProtocol}//${currentHost.replace('store', '').replace('..', '.').replace(/^\./, '')}`;
-          if (!landingUrl || landingUrl === `${currentProtocol}//`) {
-            landingUrl = `${currentProtocol}//${currentHost.split('.').slice(1).join('.')}`;
-          }
-        }
-      }
-    }
-    
-    // 최종 기본값
-    if (!landingUrl) {
-      landingUrl = 'https://areum-black.vercel.app';
-    }
-    
-    window.location.href = landingUrl;
-  };
-
-  useEffect(() => {
-    handleBack();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 selection:bg-orange-200 selection:text-orange-900">
-      <div className="max-w-2xl mx-auto px-6 py-16">
-        <h1 className="text-2xl font-semibold">이동 중...</h1>
-        <p className="mt-3 text-stone-600">
-          잠시 후 랜딩페이지로 이동합니다.
-        </p>
-        <button
-          onClick={handleBack}
-          className="mt-6 inline-flex items-center justify-center rounded-xl bg-stone-900 px-5 py-3 text-sm font-medium text-white hover:bg-stone-800 transition-colors"
-        >
-          랜딩페이지로 이동
-        </button>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<StoreLayout />}>
+          <Route path="/" element={<StoreHome />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/brand" element={<BrandPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 };
 

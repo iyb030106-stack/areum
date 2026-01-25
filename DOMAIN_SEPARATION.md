@@ -88,9 +88,12 @@ npm run build:all
 
 ## 🔗 도메인 연결 설정
 
-Store는 폐기되었으며(Store 도메인 접속 시 랜딩으로 리다이렉트), 랜딩에서 Store로 이동하는 설정은 더 이상 사용하지 않습니다.
+각 프로젝트에서 상대 도메인으로 이동할 수 있도록 환경 변수를 설정하세요:
 
-Store 프로젝트에서 랜딩으로 이동 URL을 명시하려면 아래 환경 변수를 설정하세요:
+### 랜딩페이지 프로젝트 (.env)
+```
+VITE_STORE_URL=https://areum-store.vercel.app
+```
 
 ### Store 프로젝트 (.env)
 ```

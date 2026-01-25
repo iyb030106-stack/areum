@@ -34,7 +34,8 @@ Install Command: npm install
 
 ### Step 5: 환경 변수 (선택사항)
 "Environment Variables" 섹션에서 추가:
-- (현재 Store는 폐기되어 랜딩에서 Store로 이동하지 않습니다)
+- Key: `VITE_STORE_URL`
+- Value: `https://areum-store.vercel.app` (Store 배포 후 실제 도메인)
 
 ### Step 6: 배포
 1. **"Deploy"** 버튼 클릭
@@ -77,6 +78,10 @@ Install Command: npm install
 - Key: `VITE_LANDING_URL`
 - Value: `https://areum-black.vercel.app` (랜딩페이지 도메인)
 
+추가로 `/brand` 입점 신청 폼을 저장하려면:
+- Key: `VITE_SUPABASE_URL`
+- Key: `VITE_SUPABASE_ANON_KEY`
+
 ### Step 4: 배포
 1. **"Deploy"** 버튼 클릭
 2. 배포가 완료될 때까지 대기
@@ -98,8 +103,6 @@ Install Command: npm install
 ### Store
 배포 후 Vercel에서 제공하는 URL로 접속하여 확인:
 - 예: `https://areum-store.vercel.app`
-
-현재 Store는 폐기되어, 접속 시 랜딩으로 리다이렉트됩니다.
 
 ---
 

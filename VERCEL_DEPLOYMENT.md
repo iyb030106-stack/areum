@@ -17,7 +17,7 @@
 
 ### 3단계: 환경 변수 (선택사항)
 **Settings → Environment Variables:**
-- (현재 Store는 폐기되어 랜딩에서 Store로 이동하지 않습니다)
+- `VITE_STORE_URL`: `https://areum-store.vercel.app` (Store 도메인)
 
 ### 4단계: 배포
 - "Deploy" 버튼 클릭
@@ -42,6 +42,9 @@
 ### 3단계: 환경 변수 (선택사항)
 **Settings → Environment Variables:**
 - `VITE_LANDING_URL`: `https://areum-black.vercel.app` (랜딩페이지 도메인)
+- `/brand` 입점 신청 폼 저장 (Supabase):
+  - `VITE_SUPABASE_URL`: (Supabase Project URL)
+  - `VITE_SUPABASE_ANON_KEY`: (Supabase anon key)
 
 ### 4단계: 배포
 - "Deploy" 버튼 클릭
@@ -63,7 +66,7 @@
 - 각 프로젝트의 Settings → Domains에서 원하는 도메인을 연결할 수 있습니다
 - 예시:
   - 랜딩페이지: `areum.com`, `www.areum.com`
-  - Store: (폐기) 접속 시 랜딩으로 리다이렉트
+  - Store: `areum-store.vercel.app` (또는 커스텀 도메인)
 
 ---
 
