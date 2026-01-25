@@ -1,38 +1,18 @@
-# Store URL 설정 가이드
+# Store URL 설정 가이드 (폐기)
 
-## 🔴 문제: 404 에러 발생
+## 🔴 안내
 
-"아름 시작하기" 버튼을 클릭했을 때 404 에러가 발생하는 경우, Store 프로젝트가 아직 배포되지 않았거나 URL이 잘못 설정되었을 수 있습니다.
+현재 Store는 폐기되었으며, Store 도메인으로 접속 시 랜딩페이지로 리다이렉트됩니다.
 
-## ✅ 해결 방법
+## ✅ 참고
 
-### 방법 1: Vercel 환경 변수 설정 (권장)
+Store 프로젝트에서 랜딩으로 이동 URL을 명시하려면 아래 환경 변수를 설정하세요:
 
-#### 랜딩페이지 프로젝트에서:
-1. Vercel 대시보드에서 **랜딩페이지 프로젝트** 선택
-2. **Settings** → **Environment Variables** 클릭
-3. 새 환경 변수 추가:
-   - **Key**: `VITE_STORE_URL`
-   - **Value**: Store 프로젝트의 실제 URL
-     - 예: `https://areum-store.vercel.app`
-     - 또는 커스텀 도메인: `https://store.areum.com`
-4. **Save** 클릭
-5. 프로젝트 **재배포** (Deployments → 최신 배포 → ... → Redeploy)
+- `VITE_LANDING_URL`: `https://areum-black.vercel.app`
 
-#### Store 프로젝트에서:
-1. Vercel 대시보드에서 **Store 프로젝트** 선택
-2. **Settings** → **Environment Variables** 클릭
-3. 새 환경 변수 추가:
-   - **Key**: `VITE_LANDING_URL`
-   - **Value**: 랜딩페이지 프로젝트의 실제 URL
-     - 예: `https://areum-landing.vercel.app`
-     - 또는 커스텀 도메인: `https://areum.com`
-4. **Save** 클릭
-5. 프로젝트 **재배포**
+### Store 프로젝트 배포 확인
 
-### 방법 2: Store 프로젝트 배포 확인
-
-Store 프로젝트가 배포되어 있는지 확인하세요:
+Store 프로젝트가 배포되어 있는지 확인하세요(폐기 리다이렉트 버전):
 
 1. Vercel 대시보드 확인
    - Store 프로젝트가 있는지 확인
@@ -42,25 +22,16 @@ Store 프로젝트가 배포되어 있는지 확인하세요:
 2. Store 프로젝트가 없다면:
    - `VERCEL_SETUP_GUIDE.md` 파일 참고하여 Store 프로젝트 배포
 
-### 방법 3: 임시 해결책 (개발 환경)
+### 임시 확인 (개발 환경)
 
-로컬 개발 환경에서는 자동으로 감지됩니다:
+로컬 개발 환경에서는 다음 포트를 사용합니다:
 - 랜딩페이지: `http://localhost:3000`
 - Store: `http://localhost:3001`
 
-## 🔍 현재 상태 확인
-
-브라우저 콘솔(F12)에서 다음을 확인하세요:
-- "Store로 이동: [URL]" 메시지 확인
-- 실제로 이동하는 URL이 올바른지 확인
-
 ## 📝 체크리스트
 
-- [ ] Store 프로젝트가 Vercel에 배포되어 있음
-- [ ] 랜딩페이지 프로젝트에 `VITE_STORE_URL` 환경 변수 설정
-- [ ] Store 프로젝트에 `VITE_LANDING_URL` 환경 변수 설정
-- [ ] 환경 변수 설정 후 두 프로젝트 모두 재배포 완료
-- [ ] Store URL이 정상 작동하는지 확인 (직접 접속 테스트)
+- [ ] Store 프로젝트가 Vercel에 배포되어 있음(폐기 리다이렉트)
+- [ ] Store 프로젝트에 `VITE_LANDING_URL` 환경 변수 설정(선택)
 
 ## 🆘 여전히 문제가 있나요?
 

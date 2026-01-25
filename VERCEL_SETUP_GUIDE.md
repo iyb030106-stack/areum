@@ -26,8 +26,7 @@
 
 ### Step 3: 환경 변수 (선택)
 "Environment Variables" 섹션에서:
-- Key: `VITE_STORE_URL`
-- Value: `https://store.areum.com` (또는 Store 실제 도메인)
+- (현재 Store는 폐기되어 랜딩에서 Store로 이동하지 않습니다)
 
 ### Step 4: Deploy
 - "Deploy" 버튼 클릭
@@ -56,7 +55,7 @@
 ### Step 3: 환경 변수 (선택)
 "Environment Variables" 섹션에서:
 - Key: `VITE_LANDING_URL`
-- Value: `https://areum.com` (또는 랜딩페이지 실제 도메인)
+- Value: `https://areum-black.vercel.app` (랜딩페이지 도메인)
 
 ### Step 4: Deploy
 - "Deploy" 버튼 클릭

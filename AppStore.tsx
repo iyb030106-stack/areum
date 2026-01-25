@@ -1,5 +1,4 @@
-import React from 'react';
-import Shop from './components/Shop';
+import React, { useEffect } from 'react';
 
 const AppStore: React.FC = () => {
   const handleBack = () => {
@@ -46,15 +45,31 @@ const AppStore: React.FC = () => {
     
     // 최종 기본값
     if (!landingUrl) {
-      landingUrl = 'https://areum.com';
+      landingUrl = 'https://areum-black.vercel.app';
     }
     
     window.location.href = landingUrl;
   };
 
+  useEffect(() => {
+    handleBack();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 selection:bg-orange-200 selection:text-orange-900">
-      <Shop onBack={handleBack} />
+      <div className="max-w-2xl mx-auto px-6 py-16">
+        <h1 className="text-2xl font-semibold">이동 중...</h1>
+        <p className="mt-3 text-stone-600">
+          잠시 후 랜딩페이지로 이동합니다.
+        </p>
+        <button
+          onClick={handleBack}
+          className="mt-6 inline-flex items-center justify-center rounded-xl bg-stone-900 px-5 py-3 text-sm font-medium text-white hover:bg-stone-800 transition-colors"
+        >
+          랜딩페이지로 이동
+        </button>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,8 @@
 # 🚀 빠른 배포 가이드
 
-이 프로젝트는 **랜딩페이지**와 **Store**를 별도로 배포해야 합니다.
+이 프로젝트는 **랜딩페이지**와 **Store**를 별도로 배포할 수 있습니다.
+
+현재 Store는 폐기되어, 접속 시 랜딩페이지로 리다이렉트됩니다.
 
 ## 배포 방법 1: Vercel 웹사이트 (추천! 가장 쉬움)
 
@@ -83,8 +85,7 @@ git push origin master
 ## ✅ 배포 후 확인사항
 
 - [ ] 랜딩페이지 URL이 정상 작동하는지 확인
-- [ ] Store URL이 정상 작동하는지 확인
-- [ ] 두 프로젝트가 서로 다른 URL을 가지고 있는지 확인
+- [ ] Store URL이 랜딩으로 리다이렉트되는지 확인
 
 ---
 
@@ -92,7 +93,7 @@ git push origin master
 
 각 프로젝트의 Settings → Domains에서 원하는 도메인을 연결할 수 있습니다:
 - 랜딩페이지: `areum.com`, `www.areum.com`
-- Store: `store.areum.com`, `shop.areum.com`
+- Store: (폐기) 접속 시 랜딩으로 리다이렉트
 
 ---
 
