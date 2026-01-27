@@ -2,30 +2,38 @@
   "name": "areum---clothing-rental",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:landing": "vite --mode landing",
-    "dev:store": "vite --mode store",
-    "build": "vite build",
-    "build:landing": "vite build --mode landing && node scripts/rename-html.mjs landing",
-    "build:store": "vite build --mode store && node scripts/rename-html.mjs store",
-    "build:all": "npm run build:landing && npm run build:store",
-    "preview": "vite preview",
-    "preview:landing": "vite preview --outDir dist-landing",
-    "preview:store": "vite preview --outDir dist-store --port 3001"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.91.1",
+    "autoprefixer": "^10.4.19",
     "lucide-react": "^0.562.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-router-dom": "^7.13.0"
+    "next": "^14.2.35",
+    "postcss": "^8.4.38",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  }
+    "@types/node": "^22.19.7",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "~5.8.2"
+  },
+  "description": "<div align=\"center\">\r <img width=\"1200\" height=\"475\" alt=\"GHBanner\" src=\"https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6\" />\r </div>",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iyb030106-stack/areum.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iyb030106-stack/areum/issues"
+  },
+  "homepage": "https://github.com/iyb030106-stack/areum#readme"
 }

@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useMemo, useState } from 'react';
 import { ArrowRight, BarChart3, CheckCircle2, Crown, Sparkles, TrendingUp, X } from 'lucide-react';
-import { supabase } from './store/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 type DashboardMetric = {
   label: string;
@@ -9,7 +11,6 @@ type DashboardMetric = {
   delta: string;
 };
 
-// --- Helper components for interactive stats ---
 function MetricCard({ metric }: { metric: DashboardMetric }) {
   const [displayValue, setDisplayValue] = useState(0);
   const target = metric.value;
@@ -49,7 +50,7 @@ function InteractiveBar({ label, value }: { label: string; value: number }) {
 
   return (
     <div className="flex-1">
-      <div className="h-44 rounded-2xl bg-white/5 p-2 flex items-end">
+      <div className="flex h-44 items-end rounded-2xl bg-white/5 p-2">
         <div
           className="w-full rounded-xl bg-gradient-to-t from-[#C59A6D] to-[#D4AF37] transition-all duration-500 ease-out"
           style={{ height: hovered ? `${Math.min(value + 8, 100)}%` : `${value}%` }}
@@ -62,7 +63,7 @@ function InteractiveBar({ label, value }: { label: string; value: number }) {
   );
 }
 
-const AppStore: React.FC = () => {
+export default function BrandPage() {
   const [brandName, setBrandName] = useState('');
   const [managerName, setManagerName] = useState('');
   const [contact, setContact] = useState('');
@@ -171,7 +172,7 @@ const AppStore: React.FC = () => {
 
           <button
             onClick={scrollToForm}
-            className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] transition-colors"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D]"
           >
             <span>입점 문의하기</span>
             <ArrowRight size={16} />
@@ -203,14 +204,14 @@ const AppStore: React.FC = () => {
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   onClick={scrollToForm}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] transition-colors sm:px-6 sm:py-3 sm:text-sm"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D] sm:px-6 sm:py-3 sm:text-sm"
                 >
                   파트너 시작하기
                   <ArrowRight size={16} />
                 </button>
                 <a
                   href="#data-preview"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-stone-50 hover:border-[#C59A6D]/60 hover:text-[#D4AF37] transition-colors sm:px-6 sm:py-3 sm:text-sm"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-stone-50 transition-colors hover:border-[#C59A6D]/60 hover:text-[#D4AF37] sm:px-6 sm:py-3 sm:text-sm"
                 >
                   데이터 미리보기
                 </a>
@@ -324,7 +325,7 @@ const AppStore: React.FC = () => {
             </div>
 
             {error && (
-              <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100 whitespace-pre-line">
+              <div className="mt-6 whitespace-pre-line rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
                 {error}
               </div>
             )}
@@ -387,7 +388,7 @@ const AppStore: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-4 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] disabled:opacity-60 disabled:cursor-not-allowed transition-colors sm:px-6 sm:py-4 sm:text-sm"
+                className="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-4 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D] disabled:cursor-not-allowed disabled:opacity-60 sm:px-6 sm:py-4 sm:text-sm"
               >
                 <span>{submitting ? '전송 중...' : '입점 문의 제출'}</span>
                 <ArrowRight size={16} />
@@ -407,7 +408,7 @@ const AppStore: React.FC = () => {
           <div className="relative w-full max-w-lg rounded-[2rem] border border-white/10 bg-[#111111] p-8 shadow-2xl">
             <button
               onClick={() => setSuccessOpen(false)}
-              className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-stone-200 hover:text-[#D4AF37] transition-colors"
+              className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-stone-200 transition-colors hover:text-[#D4AF37]"
               aria-label="Close"
             >
               <X size={18} />
@@ -419,16 +420,14 @@ const AppStore: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-stone-50">귀한 발걸음 감사합니다. 곧 연락드리겠습니다.</h3>
-                <p className="mt-3 text-sm text-stone-200/80">
-                  남겨주신 문의는 내부 검토 후 빠르게 연락드릴게요.
-                </p>
+                <p className="mt-3 text-sm text-stone-200/80">남겨주신 문의는 내부 검토 후 빠르게 연락드릴게요.</p>
               </div>
             </div>
 
             <div className="mt-8 flex justify-end">
               <button
                 onClick={() => setSuccessOpen(false)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] hover:bg-[#C59A6D] transition-colors sm:px-5 sm:py-3 sm:text-sm"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D] sm:px-5 sm:py-3 sm:text-sm"
               >
                 확인
                 <ArrowRight size={16} />
@@ -445,7 +444,4 @@ const AppStore: React.FC = () => {
       </footer>
     </div>
   );
-};
-
-export default AppStore;
-
+}

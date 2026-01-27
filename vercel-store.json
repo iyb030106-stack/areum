@@ -1,15 +1,9 @@
 {
-  "buildCommand": "npm run build:store",
-  "outputDirectory": "dist-store",
-  "devCommand": "npm run dev:store",
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "framework": "nextjs"
 }
 
 

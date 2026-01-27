@@ -1,15 +1,9 @@
 {
-  "buildCommand": "npm run build:landing",
-  "outputDirectory": "dist-landing",
-  "devCommand": "npm run dev:landing",
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "framework": "nextjs"
 }
 
 
