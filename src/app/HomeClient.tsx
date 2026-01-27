@@ -168,124 +168,128 @@ export default function HomeClient() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <main className="mx-auto max-w-6xl px-0 pb-16 pt-0 md:px-0">
-        <section className="border-b border-white/10 bg-black px-4 py-4 md:px-6">
-          <p className="text-xs font-black tracking-[0.22em] text-white/70">areum</p>
-          <div className="mt-3 border border-white/30 bg-white px-4 py-3">
-            <input
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="올시즌 꾸안꾸 필수템, 스웨트팬츠"
-              className="w-full bg-transparent text-sm font-semibold text-black outline-none placeholder:text-black/40"
-            />
-          </div>
+      <main className="pb-16 pt-0">
+        <section className="w-full border-b border-white/10 bg-black">
+          <div className="mx-auto max-w-6xl px-4 py-4 md:px-6">
+            <p className="text-xs font-black tracking-[0.22em] text-white/70">areum</p>
+            <div className="mt-3 border border-white/30 bg-white px-4 py-3">
+              <input
+                value={searchValue}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="올시즌 꾸안꾸 필수템, 스웨트팬츠"
+                className="w-full bg-transparent text-sm font-semibold text-black outline-none placeholder:text-black/40"
+              />
+            </div>
 
-          <div className="mt-3 flex items-center gap-4 text-sm font-bold text-white">
-            <button
-              type="button"
-              onClick={() => scrollTo('popular')}
-              className="transition-colors hover:text-white/80"
-            >
-              인기
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo('new')}
-              className="transition-colors hover:text-white/80"
-            >
-              신상
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo('recommend')}
-              className="transition-colors hover:text-white/80"
-            >
-              추천
-            </button>
+            <div className="mt-3 flex items-center gap-4 text-sm font-bold text-white">
+              <button
+                type="button"
+                onClick={() => scrollTo('popular')}
+                className="transition-colors hover:text-white/80"
+              >
+                인기
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTo('new')}
+                className="transition-colors hover:text-white/80"
+              >
+                신상
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTo('recommend')}
+                className="transition-colors hover:text-white/80"
+              >
+                추천
+              </button>
+            </div>
           </div>
         </section>
 
-        <section
-          className="group relative overflow-hidden border border-black/15 bg-white"
-          onMouseEnter={() => setBannerHover(true)}
-          onMouseLeave={() => setBannerHover(false)}
-        >
-          <div className="relative">
-            <Swiper
-              modules={[Autoplay]}
-              onSwiper={(s) => {
-                swiperRef.current = s;
-              }}
-              slidesPerView={3}
-              slidesPerGroup={3}
-              spaceBetween={1}
-              loop
-              speed={520}
-              autoplay={
-                bannerHover
-                  ? false
-                  : {
-                      delay: 4200,
-                      disableOnInteraction: false,
-                      pauseOnMouseEnter: true,
-                    }
-              }
-              className="w-full"
-            >
-              {banners.map((b) => (
-                <SwiperSlide key={b.id}>
-                  <div className="relative h-[170px] overflow-hidden bg-black/5 sm:h-[190px] md:h-[210px] lg:h-[220px]">
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-[1.03]"
-                      style={{ backgroundImage: `url(${b.imageUrl})` }}
-                    />
-                    <div className="absolute inset-0 bg-black/10 transition-colors duration-300 group-hover:bg-black/20" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className="text-sm font-extrabold tracking-tight text-white">{b.label}</p>
-                      <p className="mt-1 text-xs font-semibold text-white/90">{b.caption}</p>
-                      <p className="mt-1 text-[11px] font-semibold text-white/70">{b.meta}</p>
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <section
+            className="group relative overflow-hidden border border-black/15 bg-white"
+            onMouseEnter={() => setBannerHover(true)}
+            onMouseLeave={() => setBannerHover(false)}
+          >
+            <div className="relative">
+              <Swiper
+                modules={[Autoplay]}
+                onSwiper={(s) => {
+                  swiperRef.current = s;
+                }}
+                slidesPerView={3}
+                slidesPerGroup={3}
+                spaceBetween={1}
+                loop
+                speed={520}
+                autoplay={
+                  bannerHover
+                    ? false
+                    : {
+                        delay: 4200,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                      }
+                }
+                className="w-full"
+              >
+                {banners.map((b) => (
+                  <SwiperSlide key={b.id}>
+                    <div className="relative h-[170px] overflow-hidden bg-black/5 sm:h-[190px] md:h-[210px] lg:h-[220px]">
+                      <div
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-[1.03]"
+                        style={{ backgroundImage: `url(${b.imageUrl})` }}
+                      />
+                      <div className="absolute inset-0 bg-black/10 transition-colors duration-300 group-hover:bg-black/20" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <p className="text-sm font-extrabold tracking-tight text-white">{b.label}</p>
+                        <p className="mt-1 text-xs font-semibold text-white/90">{b.caption}</p>
+                        <p className="mt-1 text-[11px] font-semibold text-white/70">{b.meta}</p>
+                      </div>
                     </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
 
-            <div className="pointer-events-none absolute inset-y-0 left-1/3 w-px bg-white/15" />
-            <div className="pointer-events-none absolute inset-y-0 left-2/3 w-px bg-white/15" />
+              <div className="pointer-events-none absolute inset-y-0 left-1/3 w-px bg-white/15" />
+              <div className="pointer-events-none absolute inset-y-0 left-2/3 w-px bg-white/15" />
 
-            <div
-              className={`absolute inset-y-0 left-0 z-20 flex items-center pl-2 transition-opacity duration-200 sm:pl-3 ${
-                bannerHover ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              <button
-                type="button"
-                aria-label="Previous"
-                onClick={() => swiperRef.current?.slidePrev()}
-                className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
+              <div
+                className={`absolute inset-y-0 left-0 z-20 flex items-center pl-2 transition-opacity duration-200 sm:pl-3 ${
+                  bannerHover ? 'opacity-100' : 'opacity-0'
+                }`}
               >
-                <ChevronLeft size={18} />
-              </button>
-            </div>
-            <div
-              className={`absolute inset-y-0 right-0 z-20 flex items-center pr-2 transition-opacity duration-200 sm:pr-3 ${
-                bannerHover ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              <button
-                type="button"
-                aria-label="Next"
-                onClick={() => swiperRef.current?.slideNext()}
-                className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
+                <button
+                  type="button"
+                  aria-label="Previous"
+                  onClick={() => swiperRef.current?.slidePrev()}
+                  className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+              </div>
+              <div
+                className={`absolute inset-y-0 right-0 z-20 flex items-center pr-2 transition-opacity duration-200 sm:pr-3 ${
+                  bannerHover ? 'opacity-100' : 'opacity-0'
+                }`}
               >
-                <ChevronRight size={18} />
-              </button>
+                <button
+                  type="button"
+                  aria-label="Next"
+                  onClick={() => swiperRef.current?.slideNext()}
+                  className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <div className="px-4 md:px-6">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
           <section ref={popularRef} className="scroll-mt-20 pt-10">
             <div className="flex items-end justify-between">
               <h3 className="text-lg font-black tracking-tight">인기</h3>
@@ -382,7 +386,7 @@ export default function HomeClient() {
           </section>
         </div>
 
-        <section className="mt-12 px-4 md:px-6">
+        <section className="mx-auto mt-12 max-w-6xl px-4 md:px-6">
           <div className="flex items-end justify-between">
             <h3 className="text-lg font-black tracking-tight">신규 브랜드</h3>
             <Link href="/brand/intro" className="text-sm font-bold text-black/50 transition-colors hover:text-black">
