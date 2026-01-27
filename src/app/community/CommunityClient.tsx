@@ -112,6 +112,9 @@ const normalizeBrandId = (name: string) =>
 
 const safeInitial = (label: string) => label.trim().slice(0, 1).toUpperCase();
 
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 export default function CommunityClient() {
   const brands = useMemo(() => {
     const base = Array.from(new Set(products.map((p) => p.brand).filter(Boolean)));
@@ -211,7 +214,7 @@ export default function CommunityClient() {
   const loadComments = async (postId: string) => {
     if (!postId) return;
 
-    if (!supabase) {
+    if (!supabase || !isUuid(postId)) {
       setDetailComments(mockCommentsByPostId[postId] ?? []);
       return;
     }
@@ -231,7 +234,7 @@ export default function CommunityClient() {
   };
 
   const bumpViewCount = async (post: CommunityPost) => {
-    if (!supabase) return;
+    if (!supabase || !isUuid(post.id)) return;
 
     const nextCount = (post.view_count ?? 0) + 1;
     await supabase.from('community_posts').update({ view_count: nextCount }).eq('id', post.id);
@@ -322,6 +325,25 @@ export default function CommunityClient() {
 
   const submitComment = async () => {
     if (!detailPost) return;
+
+    if (!isUuid(detailPost.id)) {
+      const content = commentContent.trim();
+      if (!content) return;
+
+      const author = commentAuthor.trim() || (commentOfficial ? '브랜드 대표' : '익명');
+      const next: CommunityComment = {
+        id: `mock-c-${Date.now()}`,
+        post_id: detailPost.id,
+        content,
+        author_name: author,
+        brand_id: commentBrandId.trim() || detailPost.brand_id || null,
+        is_official: commentOfficial,
+        created_at: new Date().toISOString(),
+      };
+      setDetailComments((prev) => [...prev, next]);
+      setCommentContent('');
+      return;
+    }
 
     const content = commentContent.trim();
     if (!content) return;
