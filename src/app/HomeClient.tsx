@@ -211,12 +211,11 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <section
-            className="group relative overflow-hidden border border-black/15 bg-white"
-            onMouseEnter={() => setBannerHover(true)}
-            onMouseLeave={() => setBannerHover(false)}
-          >
+        <section
+          className="group relative w-full overflow-hidden border border-black/15 bg-white"
+          onMouseEnter={() => setBannerHover(true)}
+          onMouseLeave={() => setBannerHover(false)}
+        >
             <div className="relative">
               <Swiper
                 modules={[Autoplay]}
@@ -262,7 +261,7 @@ export default function HomeClient() {
               <div className="pointer-events-none absolute inset-y-0 left-2/3 w-px bg-white/15" />
 
               <div
-                className={`absolute left-3 top-1/2 z-20 -translate-y-1/2 transition-opacity duration-200 ${
+                className={`absolute left-2 top-1/2 z-20 -translate-y-1/2 transition-opacity duration-200 ${
                   bannerHover ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -276,7 +275,7 @@ export default function HomeClient() {
                 </button>
               </div>
               <div
-                className={`absolute right-3 top-1/2 z-20 -translate-y-1/2 transition-opacity duration-200 ${
+                className={`absolute right-2 top-1/2 z-20 -translate-y-1/2 transition-opacity duration-200 ${
                   bannerHover ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -290,8 +289,7 @@ export default function HomeClient() {
                 </button>
               </div>
             </div>
-          </section>
-        </div>
+        </section>
 
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <section ref={popularRef} className="scroll-mt-[100px] pt-10">
