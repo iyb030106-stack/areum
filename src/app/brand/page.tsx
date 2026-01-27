@@ -1,67 +1,24 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { ArrowRight, BarChart3, CheckCircle2, Crown, Sparkles, TrendingUp, X } from 'lucide-react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { CheckCircle2, X } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-type DashboardMetric = {
-  label: string;
-  value: number;
-  unit: string;
-  delta: string;
+const HeroContent = {
+  backgroundImageUrl:
+    'https://images.unsplash.com/photo-1520975958225-67d81d79b21b?auto=format&fit=crop&w=2400&q=80',
+  headline: '아름과 함께 새로운 패션 생태계를 만듭니다',
+  description:
+    '브랜드의 가치가 더 멀리, 더 정확하게 전달되도록. Areum Partner Channel은 브랜드 성장에 필요한 운영·데이터·마케팅 접점을 하나로 연결합니다.',
 };
 
-function MetricCard({ metric }: { metric: DashboardMetric }) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const target = metric.value;
-
-  React.useEffect(() => {
-    const duration = 1600;
-    const startTime = performance.now();
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setDisplayValue(Math.floor(easeOut * target));
-
-      if (progress < 1) requestAnimationFrame(animate);
-    };
-
-    requestAnimationFrame(animate);
-  }, [target]);
-
-  return (
-    <div className="group rounded-2xl border border-white/10 bg-[#1A1A1A]/60 p-5 transition-transform hover:scale-[1.02] hover:border-[#C59A6D]/30">
-      <p className="text-xs font-semibold text-stone-200/70">{metric.label}</p>
-      <div className="mt-3 flex items-end justify-between">
-        <p className="text-2xl font-bold text-stone-50 sm:text-3xl">
-          {displayValue}
-          <span className="ml-1 text-sm font-semibold text-stone-200/70 sm:text-base">{metric.unit}</span>
-        </p>
-        <p className="text-xs font-semibold text-[#C59A6D]">{metric.delta}</p>
-      </div>
-    </div>
-  );
-}
-
-function InteractiveBar({ label, value }: { label: string; value: number }) {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div className="flex-1">
-      <div className="flex h-44 items-end rounded-2xl bg-white/5 p-2">
-        <div
-          className="w-full rounded-xl bg-gradient-to-t from-[#C59A6D] to-[#D4AF37] transition-all duration-500 ease-out"
-          style={{ height: hovered ? `${Math.min(value + 8, 100)}%` : `${value}%` }}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        />
-      </div>
-      <p className="mt-3 text-center text-xs font-semibold text-stone-200/70">{label}</p>
-    </div>
-  );
-}
+const NavigationItems = [
+  { label: '플랫폼 소개', href: '#platform' },
+  { label: '입점 소개', href: '#onboarding' },
+  { label: '입점 문의', href: '#apply' },
+  { label: 'FAQ', href: '#faq' },
+];
 
 export default function BrandPage() {
   const [brandName, setBrandName] = useState('');
@@ -73,31 +30,6 @@ export default function BrandPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
-
-  const metrics: DashboardMetric[] = useMemo(
-    () => [
-      { label: '재대여율', value: 42, unit: '%', delta: '+6.2' },
-      { label: '구매 전환율', value: 9.4, unit: '%', delta: '+1.1' },
-      { label: '평균 만족도', value: 4.7, unit: '/5', delta: '+0.3' },
-      { label: '핏 매칭 정확도', value: 91, unit: '%', delta: '+4.8' },
-    ],
-    []
-  );
-
-  const bars = useMemo(
-    () => [
-      { label: '20-22', value: 78 },
-      { label: '23-25', value: 92 },
-      { label: '26-28', value: 64 },
-      { label: '29+', value: 38 },
-    ],
-    []
-  );
-
-  const scrollToForm = () => {
-    const el = document.getElementById('partner-form');
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,236 +83,216 @@ export default function BrandPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] text-stone-100 antialiased selection:bg-[#C59A6D]/30 selection:text-[#D4AF37]">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-24 h-96 w-96 rounded-full bg-[#D4AF37]/10 blur-3xl" />
-        <div className="absolute top-40 -right-24 h-[28rem] w-[28rem] rounded-full bg-[#C59A6D]/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-white text-zinc-950 antialiased selection:bg-blue-100 selection:text-blue-900">
+      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-6">
+          <div className="flex items-center gap-7">
+            <Link href="/brand" className="text-sm font-extrabold tracking-tight text-zinc-950 sm:text-base">
+              Areum Partner Channel
+            </Link>
 
-      <header className="relative z-10 border-b border-white/10 bg-[#1A1A1A]/70 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#C59A6D]/40 bg-white/5 text-[#D4AF37]">
-              <Crown size={18} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold tracking-[0.22em] text-[#C59A6D]">AREUM PARTNERS</p>
-              <p className="text-sm font-semibold text-stone-100">브랜드 파트너 입점</p>
-            </div>
+            <nav className="flex max-w-[55vw] items-center gap-5 overflow-x-auto text-nowrap sm:max-w-none">
+              {NavigationItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="text-xs font-medium text-zinc-600 hover:text-zinc-950"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
           </div>
 
-          <button
-            onClick={scrollToForm}
-            className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D]"
-          >
-            <span>입점 문의하기</span>
-            <ArrowRight size={16} />
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              href="#apply"
+              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+            >
+              입점 신청
+            </a>
+          </div>
         </div>
       </header>
 
-      <main className="relative z-10">
-        <section className="mx-auto max-w-6xl px-6 pb-14 pt-16 md:pb-20 md:pt-24">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-[#C59A6D]">
-                <Sparkles size={14} />
-                <span>Premium brand partnership</span>
-              </div>
+      <main>
+        <section className="relative overflow-hidden border-b border-zinc-200">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${HeroContent.backgroundImageUrl})` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-white/20" />
 
-              <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight text-stone-50 sm:text-4xl md:text-5xl">
-                당신의 브랜드, 다음 세대의 일상이 되다
+          <div className="relative mx-auto max-w-6xl px-6 py-16 sm:py-20">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold tracking-[0.22em] text-zinc-600">AREUM PARTNER CHANNEL</p>
+              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-zinc-950 sm:text-5xl">
+                {HeroContent.headline}
               </h1>
-              <p className="mt-4 text-base font-semibold text-[#D4AF37] sm:text-lg">
-                재고를 넘어 자산으로, 단순 노출을 넘어 데이터 인사이트로.
-              </p>
+              <p className="mt-5 text-sm leading-relaxed text-zinc-700 sm:text-base">{HeroContent.description}</p>
 
-              <p className="mt-5 max-w-xl text-sm leading-relaxed text-stone-200/80 sm:text-base">
-                아름은 브랜드의 미학을 대학생의 일상 속으로 가장 깊숙이 전달합니다. 단순히 옷을 빌려주는 것을 넘어,
-                실착 고객의 체형 데이터와 핏 만족도, 그리고 실제 구매 전환으로 이어지는 프리미엄 데이터를 경험하세요.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <button
-                  onClick={scrollToForm}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D] sm:px-6 sm:py-3 sm:text-sm"
-                >
-                  파트너 시작하기
-                  <ArrowRight size={16} />
-                </button>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
-                  href="#data-preview"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-stone-50 transition-colors hover:border-[#C59A6D]/60 hover:text-[#D4AF37] sm:px-6 sm:py-3 sm:text-sm"
+                  href="#apply"
+                  className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
                 >
-                  데이터 미리보기
+                  입점 신청
+                </a>
+                <a
+                  href="#platform"
+                  className="inline-flex items-center justify-center rounded-xl border border-zinc-300 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-50"
+                >
+                  플랫폼 소개 보기
                 </a>
               </div>
             </div>
+          </div>
+        </section>
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold tracking-[0.22em] text-[#C59A6D]">PARTNER SNAPSHOT</p>
-                  <h2 className="mt-3 text-xl font-bold text-stone-50 md:text-2xl">브랜드 경험을 숫자로 설계하세요</h2>
-                  <p className="mt-3 text-sm text-stone-200/80">
-                    체형·핏·반응 데이터를 한 번에 확인하고 다음 컬렉션 전략을 더 빠르게 결정합니다.
+        <section id="platform" className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <p className="text-xs font-semibold tracking-[0.22em] text-zinc-600">PLATFORM</p>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-zinc-950">플랫폼 소개</h2>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-700">
+                브랜드가 운영에 집중할 수 있도록, 파트너 온보딩부터 상품 운영, 노출, 데이터 리포트까지 일관된 파트너 경험을
+                제공합니다.
+              </p>
+            </div>
+
+            <div className="lg:col-span-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                  <p className="text-sm font-semibold text-zinc-950">브랜드 운영 지원</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-700">
+                    입점 후 운영에 필요한 정책/정산/CS 흐름을 단순화해, 브랜드의 리소스를 아낍니다.
                   </p>
                 </div>
-                <div className="hidden h-12 w-12 items-center justify-center rounded-2xl border border-[#C59A6D]/30 bg-[#D4AF37]/10 text-[#D4AF37] md:flex">
-                  <BarChart3 size={20} />
+                <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                  <p className="text-sm font-semibold text-zinc-950">클린한 B2B UI</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-700">
+                    필요한 정보를 빠르게 찾을 수 있도록, 섹션 단위로 정리된 파트너 전용 구조를 제공합니다.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                  <p className="text-sm font-semibold text-zinc-950">데이터 인사이트</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-700">
+                    고객 반응과 운영 결과를 기반으로 다음 상품 전략을 더 빠르게 결정할 수 있습니다.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                  <p className="text-sm font-semibold text-zinc-950">성장 파트너십</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-700">
+                    프로모션/캠페인 등 성장 단계별 협업 옵션을 유연하게 설계합니다.
+                  </p>
                 </div>
               </div>
-
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {metrics.map((m) => (
-                  <MetricCard key={m.label} metric={m} />
-                ))}
-              </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-16">
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
-                <TrendingUp size={18} />
-              </div>
-              <h3 className="mt-5 text-base font-bold text-stone-50 sm:text-lg">데이터 기반 고객 인사이트</h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-200/80">
-                실착 고객의 체형·핏 만족도와 반응 지표를 빠르게 수집해, 다음 상품 기획을 정교하게 만듭니다.
-              </p>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
-                <CheckCircle2 size={18} />
-              </div>
-              <h3 className="mt-5 text-base font-bold text-stone-50 sm:text-lg">새로운 구매 전환 기회</h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-200/80">
-                대여 후 구매로 이어지는 전환 데이터를 제공해, 판매 전략과 프로모션을 더욱 효과적으로 설계합니다.
-              </p>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
-                <Crown size={18} />
-              </div>
-              <h3 className="mt-5 text-base font-bold text-stone-50 sm:text-lg">브랜드 홍보 효과</h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-200/80">
-                대학생 라이프스타일 속에서 자연스럽게 노출되고, 재대여를 통해 반복적으로 브랜드 경험이 축적됩니다.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section id="data-preview" className="mx-auto max-w-6xl px-6 pb-16">
-          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/6 to-white/0 p-8 md:p-10">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold tracking-[0.22em] text-[#C59A6D]">DATA PREVIEW</p>
-                <h2 className="mt-4 text-xl font-bold text-stone-50 md:text-2xl">데이터, 그 이상의 가치</h2>
-                <p className="mt-3 max-w-xl text-sm text-stone-200/80">
-                  연령대별 선호도, 재대여율, 구매 전환율 등 주요 지표를 한 화면에서 확인할 수 있는 대시보드를 제공합니다.
+        <section id="onboarding" className="border-t border-zinc-200 bg-zinc-50">
+          <div className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
+            <div className="grid gap-10 lg:grid-cols-3">
+              <div className="lg:col-span-1">
+                <p className="text-xs font-semibold tracking-[0.22em] text-zinc-600">ONBOARDING</p>
+                <h2 className="mt-4 text-2xl font-bold tracking-tight text-zinc-950">입점 소개</h2>
+                <p className="mt-3 text-sm leading-relaxed text-zinc-700">
+                  입점 신청부터 검토, 계약, 상품 등록까지 단계별로 안내드립니다.
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-[#1A1A1A]/70 px-4 py-3 text-xs font-semibold text-stone-200/70">
-                예시 데이터
-              </div>
-            </div>
 
-            <div className="mt-8 grid gap-6 lg:grid-cols-3">
-              <div className="rounded-3xl border border-white/10 bg-[#1A1A1A]/70 p-6 lg:col-span-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-stone-50">연령대별 선호도</p>
-                  <p className="text-xs font-semibold text-stone-200/60">최근 30일</p>
-                </div>
-                <div className="mt-6 flex items-end gap-3">
-                  {bars.map((b) => (
-                    <InteractiveBar key={b.label} label={b.label} value={b.value} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-[#1A1A1A]/70 p-6">
-                <p className="text-sm font-semibold text-stone-50">핵심 지표</p>
-                <div className="mt-6 space-y-4">
-                  {metrics.slice(0, 3).map((m) => (
-                    <MetricCard key={m.label} metric={m} />
-                  ))}
+              <div className="lg:col-span-2">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                    <p className="text-xs font-semibold text-zinc-500">STEP 1</p>
+                    <p className="mt-2 text-sm font-semibold text-zinc-950">입점 신청</p>
+                    <p className="mt-2 text-sm text-zinc-700">기본 정보와 운영 희망사항을 남겨주세요.</p>
+                  </div>
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                    <p className="text-xs font-semibold text-zinc-500">STEP 2</p>
+                    <p className="mt-2 text-sm font-semibold text-zinc-950">검토 & 안내</p>
+                    <p className="mt-2 text-sm text-zinc-700">내부 검토 후 담당자가 빠르게 연락드립니다.</p>
+                  </div>
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                    <p className="text-xs font-semibold text-zinc-500">STEP 3</p>
+                    <p className="mt-2 text-sm font-semibold text-zinc-950">상품 운영 시작</p>
+                    <p className="mt-2 text-sm text-zinc-700">상품 등록 및 운영 프로세스를 시작합니다.</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="partner-form" className="mx-auto max-w-6xl px-6 pb-20">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 md:p-10">
-            <div className="flex flex-wrap items-end justify-between gap-4">
+        <section id="apply" className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-7 sm:p-10">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-semibold tracking-[0.22em] text-[#C59A6D]">CALL TO ACTION</p>
-                <h2 className="mt-4 text-xl font-bold text-stone-50 md:text-2xl">파트너 문의</h2>
-                <p className="mt-3 text-sm text-stone-200/80">아래 폼을 남겨주시면 24시간 내 연락드립니다.</p>
+                <p className="text-xs font-semibold tracking-[0.22em] text-zinc-600">CONTACT</p>
+                <h2 className="mt-3 text-2xl font-bold tracking-tight text-zinc-950">입점 문의</h2>
+                <p className="mt-2 text-sm text-zinc-700">아래 폼을 남겨주시면 확인 후 빠르게 연락드리겠습니다.</p>
               </div>
-              <div className="text-xs font-semibold text-stone-200/60">저장: Supabase brand_applications</div>
+              <div className="text-xs font-medium text-zinc-500">저장: Supabase brand_applications</div>
             </div>
 
             {error && (
-              <div className="mt-6 whitespace-pre-line rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
+              <div className="mt-6 whitespace-pre-line rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-bold text-stone-100">브랜드명</span>
+                <span className="text-sm font-semibold text-zinc-900">브랜드명</span>
                 <input
                   value={brandName}
                   onChange={(e) => setBrandName(e.target.value)}
                   required
-                  className="rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-stone-100 outline-none placeholder:text-stone-500 focus:border-[#D4AF37]/70"
+                  className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   placeholder="브랜드명"
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-bold text-stone-100">담당자 이름</span>
+                <span className="text-sm font-semibold text-zinc-900">담당자 이름</span>
                 <input
                   value={managerName}
                   onChange={(e) => setManagerName(e.target.value)}
                   required
-                  className="rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-stone-100 outline-none placeholder:text-stone-500 focus:border-[#D4AF37]/70"
+                  className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   placeholder="홍길동"
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-bold text-stone-100">연락처</span>
+                <span className="text-sm font-semibold text-zinc-900">연락처</span>
                 <input
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
                   required
-                  className="rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-stone-100 outline-none placeholder:text-stone-500 focus:border-[#D4AF37]/70"
+                  className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   placeholder="전화번호 / 이메일"
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-bold text-stone-100">브랜드 웹사이트</span>
+                <span className="text-sm font-semibold text-zinc-900">브랜드 웹사이트</span>
                 <input
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
-                  className="rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-stone-100 outline-none placeholder:text-stone-500 focus:border-[#D4AF37]/70"
+                  className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   placeholder="https://"
                 />
               </label>
 
               <label className="flex flex-col gap-2 md:col-span-2">
-                <span className="text-sm font-bold text-stone-100">메시지</span>
+                <span className="text-sm font-semibold text-zinc-900">메시지</span>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={5}
-                  className="rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-stone-100 outline-none placeholder:text-stone-500 focus:border-[#D4AF37]/70"
+                  className="rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-950 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   placeholder="보유 재고/입점 희망 방식/희망 일정 등을 자유롭게 남겨주세요"
                 />
               </label>
@@ -388,12 +300,46 @@ export default function BrandPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-4 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D] disabled:cursor-not-allowed disabled:opacity-60 sm:px-6 sm:py-4 sm:text-sm"
+                className="md:col-span-2 inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span>{submitting ? '전송 중...' : '입점 문의 제출'}</span>
-                <ArrowRight size={16} />
+                {submitting ? '전송 중...' : '입점 문의 제출'}
               </button>
             </form>
+          </div>
+        </section>
+
+        <section id="faq" className="border-t border-zinc-200 bg-zinc-50">
+          <div className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
+            <div className="grid gap-10 lg:grid-cols-3">
+              <div className="lg:col-span-1">
+                <p className="text-xs font-semibold tracking-[0.22em] text-zinc-600">FAQ</p>
+                <h2 className="mt-4 text-2xl font-bold tracking-tight text-zinc-950">자주 묻는 질문</h2>
+                <p className="mt-3 text-sm leading-relaxed text-zinc-700">
+                  빠른 확인을 위해 핵심 질문을 정리했습니다. 자세한 내용은 문의로 남겨주세요.
+                </p>
+              </div>
+
+              <div className="lg:col-span-2">
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                    <p className="text-sm font-semibold text-zinc-950">입점 심사는 얼마나 걸리나요?</p>
+                    <p className="mt-2 text-sm text-zinc-700">신청 내용 확인 후 담당자가 연락드립니다.</p>
+                  </div>
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                    <p className="text-sm font-semibold text-zinc-950">어떤 브랜드가 적합한가요?</p>
+                    <p className="mt-2 text-sm text-zinc-700">
+                      브랜드의 운영 방식과 상품 특성에 따라 맞춤 제안을 드립니다.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+                    <p className="text-sm font-semibold text-zinc-950">협업 범위는 어떻게 정하나요?</p>
+                    <p className="mt-2 text-sm text-zinc-700">
+                      입점 후 목표에 맞춰 운영/프로모션 옵션을 조율합니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -402,44 +348,45 @@ export default function BrandPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
           <button
             onClick={() => setSuccessOpen(false)}
-            className="absolute inset-0 bg-black/70"
+            className="absolute inset-0 bg-black/40"
             aria-label="Close modal"
           />
-          <div className="relative w-full max-w-lg rounded-[2rem] border border-white/10 bg-[#111111] p-8 shadow-2xl">
+          <div className="relative w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-7 shadow-2xl sm:p-8">
             <button
               onClick={() => setSuccessOpen(false)}
-              className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-stone-200 transition-colors hover:text-[#D4AF37]"
+              className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
               aria-label="Close"
             >
               <X size={18} />
             </button>
 
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
                 <CheckCircle2 size={22} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-stone-50">귀한 발걸음 감사합니다. 곧 연락드리겠습니다.</h3>
-                <p className="mt-3 text-sm text-stone-200/80">남겨주신 문의는 내부 검토 후 빠르게 연락드릴게요.</p>
+                <h3 className="text-lg font-bold text-zinc-950">문의가 접수되었습니다.</h3>
+                <p className="mt-2 text-sm text-zinc-700">
+                  남겨주신 내용은 확인 후 빠르게 연락드리겠습니다.
+                </p>
               </div>
             </div>
 
             <div className="mt-8 flex justify-end">
               <button
                 onClick={() => setSuccessOpen(false)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#1A1A1A] transition-colors hover:bg-[#C59A6D] sm:px-5 sm:py-3 sm:text-sm"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
               >
                 확인
-                <ArrowRight size={16} />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <footer className="relative z-10 border-t border-white/10 bg-[#1A1A1A]/70">
+      <footer className="border-t border-zinc-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-10">
-          <p className="text-xs text-stone-200/60">© {new Date().getFullYear()} areum. Brand partnership landing.</p>
+          <p className="text-xs text-zinc-500">&copy; {new Date().getFullYear()} areum. Partner channel.</p>
         </div>
       </footer>
     </div>
