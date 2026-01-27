@@ -1,10 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Menu, X, ChevronDown } from 'lucide-react';
 
 export default function GlobalHeader() {
+  const pathname = usePathname();
+  if (pathname.startsWith('/brand')) return null;
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<'category' | 'brand' | 'service' | null>(null);
 
