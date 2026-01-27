@@ -72,6 +72,9 @@ export default function ProductDetailClient({ productId }: Props) {
               {images.map((src, idx) => (
                 <SwiperSlide key={`${src}-${idx}`}>
                   <div className="relative aspect-[3/4] overflow-hidden">
+                    <div className="absolute left-3 top-3 z-20 inline-flex items-center bg-black px-2 py-1 text-[11px] font-bold text-white">
+                      3일 대여
+                    </div>
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-[1.03]"
                       style={{ backgroundImage: `url(${src})` }}
