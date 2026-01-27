@@ -241,7 +241,7 @@ export default function HomeClient() {
               >
                 {banners.map((b) => (
                   <SwiperSlide key={b.id}>
-                    <div className="relative h-[170px] overflow-hidden bg-black/5 sm:h-[190px] md:h-[210px] lg:h-[220px]">
+                    <div className="relative aspect-square overflow-hidden bg-black/5">
                       <div
                         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-[1.03]"
                         style={{ backgroundImage: `url(${b.imageUrl})` }}
@@ -262,7 +262,7 @@ export default function HomeClient() {
               <div className="pointer-events-none absolute inset-y-0 left-2/3 w-px bg-white/15" />
 
               <div
-                className={`absolute inset-y-0 left-0 z-20 flex items-center pl-2 transition-opacity duration-200 sm:pl-3 ${
+                className={`absolute left-3 top-1/2 z-20 -translate-y-1/2 transition-opacity duration-200 ${
                   bannerHover ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -270,13 +270,13 @@ export default function HomeClient() {
                   type="button"
                   aria-label="Previous"
                   onClick={() => swiperRef.current?.slidePrev()}
-                  className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
                 >
                   <ChevronLeft size={18} />
                 </button>
               </div>
               <div
-                className={`absolute inset-y-0 right-0 z-20 flex items-center pr-2 transition-opacity duration-200 sm:pr-3 ${
+                className={`absolute right-3 top-1/2 z-20 -translate-y-1/2 transition-opacity duration-200 ${
                   bannerHover ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -284,7 +284,7 @@ export default function HomeClient() {
                   type="button"
                   aria-label="Next"
                   onClick={() => swiperRef.current?.slideNext()}
-                  className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
                 >
                   <ChevronRight size={18} />
                 </button>
