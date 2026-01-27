@@ -133,9 +133,9 @@ export default function HomeClient() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-4 md:px-6">
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-0 md:px-6">
         <section
-          className="group relative overflow-hidden rounded-2xl border border-black/10 bg-white"
+          className="group relative overflow-hidden border border-black/15 bg-white"
           onMouseEnter={() => setBannerHover(true)}
           onMouseLeave={() => setBannerHover(false)}
         >
@@ -184,7 +184,7 @@ export default function HomeClient() {
             <div className="pointer-events-none absolute inset-y-0 left-2/3 w-px bg-white/15" />
 
             <div
-              className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-opacity duration-200 sm:pl-4 ${
+              className={`absolute inset-y-0 left-0 z-30 flex items-center pl-2 transition-opacity duration-200 sm:pl-3 ${
                 bannerHover ? 'opacity-100' : 'opacity-0'
               }`}
             >
@@ -192,13 +192,13 @@ export default function HomeClient() {
                 type="button"
                 aria-label="Previous"
                 onClick={() => swiperRef.current?.slidePrev()}
-                className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-sm backdrop-blur transition-colors hover:bg-slate-100 hover:text-sky-700"
+                className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
               >
                 <ChevronLeft size={18} />
               </button>
             </div>
             <div
-              className={`pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 transition-opacity duration-200 sm:pr-4 ${
+              className={`absolute inset-y-0 right-0 z-30 flex items-center pr-2 transition-opacity duration-200 sm:pr-3 ${
                 bannerHover ? 'opacity-100' : 'opacity-0'
               }`}
             >
@@ -206,7 +206,7 @@ export default function HomeClient() {
                 type="button"
                 aria-label="Next"
                 onClick={() => swiperRef.current?.slideNext()}
-                className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-sm backdrop-blur transition-colors hover:bg-slate-100 hover:text-sky-700"
+                className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
               >
                 <ChevronRight size={18} />
               </button>
@@ -236,10 +236,10 @@ export default function HomeClient() {
               </div>
             </div>
           ) : (
-            <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:grid-cols-4 md:gap-x-3 lg:grid-cols-5">
+            <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filtered.map((p) => (
                 <Link key={p.id} href={`/product/${p.id}`} className="group block">
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-black/5">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-none bg-black/5">
                     <div className="absolute left-3 top-3 z-10 inline-flex items-center rounded-md bg-black px-2 py-1 text-[11px] font-bold text-white">
                       3일 대여
                     </div>
@@ -278,12 +278,12 @@ export default function HomeClient() {
             </Link>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
             {brandCards.map((b) => (
               <Link
                 key={b.id}
                 href="/"
-                className="group relative flex items-center overflow-hidden rounded-2xl border border-black/10 bg-white"
+                className="group relative flex items-center overflow-hidden border border-black/15 bg-white"
               >
                 <div className="relative h-20 w-28 shrink-0 overflow-hidden bg-black/5 md:h-24 md:w-36">
                   <div

@@ -10,6 +10,8 @@ export default function GlobalHeader() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const hideHeader = pathname.startsWith('/brand');
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<'category' | 'brand' | 'service' | null>(null);
   const [searchValue, setSearchValue] = useState('');
@@ -48,40 +50,42 @@ export default function GlobalHeader() {
 
   return (
     <>
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-black">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 md:px-6">
-          <button
-            type="button"
-            aria-label="Open menu"
-            onClick={() => setDrawerOpen(true)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/0 text-white transition-colors hover:bg-white/10 hover:text-sky-300"
-          >
-            <Menu size={20} />
-          </button>
+      {!hideHeader && (
+        <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-black">
+          <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 md:px-6">
+            <button
+              type="button"
+              aria-label="Open menu"
+              onClick={() => setDrawerOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center border border-white/15 bg-black text-white transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <Menu size={20} />
+            </button>
 
-          <Link href="/" className="shrink-0 text-lg font-black tracking-tight text-white">
-            아름
-            <span className="ml-1 text-xs font-semibold text-white/60">Areum</span>
-          </Link>
+            <Link href="/" className="shrink-0 text-lg font-black tracking-tight text-white">
+              아름
+              <span className="ml-1 text-xs font-semibold text-white/60">Areum</span>
+            </Link>
 
-          <div className="flex-1">
-            {showSearch && (
-              <div className="flex items-center rounded-full border border-white/15 bg-white/0 px-4 py-2 transition-colors focus-within:border-white/40">
-                <input
-                  value={searchValue}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="상품, 브랜드 검색"
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
-                />
-              </div>
-            )}
+            <div className="flex-1">
+              {showSearch && (
+                <div className="flex items-center border border-white/35 bg-white px-4 py-2">
+                  <input
+                    value={searchValue}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    placeholder="단 7일 월간 입점처 한정 혜택"
+                    className="w-full bg-transparent text-sm text-black outline-none placeholder:text-black/40"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="w-10" />
           </div>
+        </header>
+      )}
 
-          <div className="w-10" />
-        </div>
-      </header>
-
-      {drawerOpen && (
+      {!hideHeader && drawerOpen && (
         <div className="fixed inset-0 z-50">
           <button
             type="button"
