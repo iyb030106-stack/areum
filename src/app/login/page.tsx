@@ -135,18 +135,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <header className="border-b border-black/10">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
-          <Link href="/" className="text-lg font-black tracking-tight">
-            아름
-            <span className="ml-1 text-xs font-semibold text-black/60">Areum</span>
-          </Link>
-          <Link href="/" className="text-sm font-semibold text-black/60 hover:text-black">
-            돌아가기
-          </Link>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-md px-4 py-12">
         <h1 className="text-2xl font-black tracking-tight">
           {mode === 'signup' ? '회원가입' : '로그인'}
