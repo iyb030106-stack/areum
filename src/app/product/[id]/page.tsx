@@ -1,8 +1,13 @@
 import Link from 'next/link';
+import { products } from '@/data/products';
 
 type Props = {
   params: { id: string };
 };
+
+export function generateStaticParams() {
+  return products.map((p) => ({ id: p.id }));
+}
 
 export default function ProductDetailPage({ params }: Props) {
   return (
