@@ -185,7 +185,7 @@ export default function HomeClient() {
 
         <section className="sticky top-14 z-40 w-full border-b border-white/10 bg-black">
           <div className="mx-auto max-w-6xl px-4 md:px-6">
-            <div className="flex h-12 items-center gap-4 text-sm font-bold text-white">
+            <div className="flex h-11 items-center gap-4 text-sm font-bold text-white">
               <button
                 type="button"
                 onClick={() => scrollTo('popular')}
@@ -294,7 +294,7 @@ export default function HomeClient() {
         </div>
 
         <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <section ref={popularRef} className="scroll-mt-[104px] pt-10">
+          <section ref={popularRef} className="scroll-mt-[100px] pt-10">
             <div className="flex items-end justify-between">
               <h3 className="text-lg font-black tracking-tight">인기</h3>
             </div>
@@ -329,7 +329,7 @@ export default function HomeClient() {
             </div>
           </section>
 
-          <section ref={newRef} className="scroll-mt-[104px] pt-12">
+          <section ref={newRef} className="scroll-mt-[100px] pt-12">
             <div className="flex items-end justify-between">
               <h3 className="text-lg font-black tracking-tight">신상</h3>
             </div>
@@ -359,7 +359,7 @@ export default function HomeClient() {
             </div>
           </section>
 
-          <section ref={recommendRef} className="scroll-mt-[104px] pt-12">
+          <section ref={recommendRef} className="scroll-mt-[100px] pt-12">
             <div className="flex items-end justify-between">
               <h3 className="text-lg font-black tracking-tight">추천</h3>
             </div>
