@@ -1,42 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Menu, X, ChevronDown } from 'lucide-react';
 
 export default function GlobalHeader() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<'category' | 'brand' | 'service' | null>(null);
-  const [searchValue, setSearchValue] = useState('');
-
-  const q = searchParams.get('q') ?? '';
-
-  useEffect(() => {
-    setSearchValue(q);
-  }, [q]);
-
-  const onSearchChange = (value: string) => {
-    setSearchValue(value);
-    if (pathname !== '/') return;
-
-    const next = new URLSearchParams(searchParams.toString());
-    if (value.trim()) next.set('q', value);
-    else next.delete('q');
-
-    const qs = next.toString();
-    router.replace(qs ? `/?${qs}` : '/');
-  };
 
   const toggleSection = (key: 'category' | 'brand' | 'service') => {
     setOpenSection((prev) => (prev === key ? null : key));
   };
-
-  const showSearch = pathname === '/';
 
   const serviceLinks = useMemo(
     () => [
@@ -60,24 +34,8 @@ export default function GlobalHeader() {
           </button>
 
           <Link href="/" className="shrink-0 text-lg font-black tracking-tight text-white">
-            아름
-            <span className="ml-1 text-xs font-semibold text-white/60">Areum</span>
+            areum
           </Link>
-
-          <div className="flex-1">
-            {showSearch && (
-              <div className="flex items-center rounded-full border border-white/15 bg-white/0 px-4 py-2 transition-colors focus-within:border-white/40">
-                <input
-                  value={searchValue}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="상품, 브랜드 검색"
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="w-10" />
         </div>
       </header>
 

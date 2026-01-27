@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperType } from 'swiper';
@@ -16,6 +16,7 @@ const formatKRW = (value: number) =>
 
 export default function HomeClient() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const products: Product[] = useMemo(() => defaultProducts, []);
 
   const banners = useMemo(
@@ -75,13 +76,47 @@ export default function HomeClient() {
   const [bannerHover, setBannerHover] = useState(false);
   const swiperRef = useRef<SwiperType | null>(null);
 
+  const brandSwiperRef = useRef<SwiperType | null>(null);
+  const popularRef = useRef<HTMLDivElement | null>(null);
+  const newRef = useRef<HTMLDivElement | null>(null);
+  const recommendRef = useRef<HTMLDivElement | null>(null);
+
+  const q = searchParams.get('q') ?? '';
+  const [searchValue, setSearchValue] = useState('');
+
+  useEffect(() => {
+    setSearchValue(q);
+  }, [q]);
+
+  const onSearchChange = (value: string) => {
+    setSearchValue(value);
+
+    const next = new URLSearchParams(searchParams.toString());
+    if (value.trim()) next.set('q', value);
+    else next.delete('q');
+
+    const qs = next.toString();
+    router.replace(qs ? `/?${qs}` : '/');
+  };
+
+  const scrollTo = (target: 'popular' | 'new' | 'recommend') => {
+    const el =
+      target === 'popular' ? popularRef.current : target === 'new' ? newRef.current : recommendRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const filtered = useMemo(() => {
-    const q = (searchParams.get('q') ?? '').trim().toLowerCase();
-    if (!q) return products;
+    const qq = (searchParams.get('q') ?? '').trim().toLowerCase();
+    if (!qq) return products;
     return products.filter(
-      (p) => p.brand.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+      (p) => p.brand.toLowerCase().includes(qq) || p.name.toLowerCase().includes(qq)
     );
   }, [products, searchParams]);
+
+  const popularItems = useMemo(() => filtered.slice(0, 10), [filtered]);
+  const newItems = useMemo(() => filtered.slice(5, 15), [filtered]);
+  const recommendItems = useMemo(() => filtered.slice(2, 12), [filtered]);
 
   const brandCards = useMemo(
     () => [
@@ -133,9 +168,45 @@ export default function HomeClient() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-4 md:px-6">
+      <main className="mx-auto max-w-6xl px-0 pb-16 pt-0 md:px-0">
+        <section className="border-b border-white/10 bg-black px-4 py-4 md:px-6">
+          <p className="text-xs font-black tracking-[0.22em] text-white/70">areum</p>
+          <div className="mt-3 border border-white/30 bg-white px-4 py-3">
+            <input
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="올시즌 꾸안꾸 필수템, 스웨트팬츠"
+              className="w-full bg-transparent text-sm font-semibold text-black outline-none placeholder:text-black/40"
+            />
+          </div>
+
+          <div className="mt-3 flex items-center gap-4 text-sm font-bold text-white">
+            <button
+              type="button"
+              onClick={() => scrollTo('popular')}
+              className="transition-colors hover:text-white/80"
+            >
+              인기
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo('new')}
+              className="transition-colors hover:text-white/80"
+            >
+              신상
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo('recommend')}
+              className="transition-colors hover:text-white/80"
+            >
+              추천
+            </button>
+          </div>
+        </section>
+
         <section
-          className="group relative overflow-hidden rounded-2xl border border-black/10 bg-white"
+          className="group relative overflow-hidden border border-black/15 bg-white"
           onMouseEnter={() => setBannerHover(true)}
           onMouseLeave={() => setBannerHover(false)}
         >
@@ -184,7 +255,7 @@ export default function HomeClient() {
             <div className="pointer-events-none absolute inset-y-0 left-2/3 w-px bg-white/15" />
 
             <div
-              className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-opacity duration-200 sm:pl-4 ${
+              className={`absolute inset-y-0 left-0 z-20 flex items-center pl-2 transition-opacity duration-200 sm:pl-3 ${
                 bannerHover ? 'opacity-100' : 'opacity-0'
               }`}
             >
@@ -192,13 +263,13 @@ export default function HomeClient() {
                 type="button"
                 aria-label="Previous"
                 onClick={() => swiperRef.current?.slidePrev()}
-                className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-sm backdrop-blur transition-colors hover:bg-slate-100 hover:text-sky-700"
+                className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
               >
                 <ChevronLeft size={18} />
               </button>
             </div>
             <div
-              className={`pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 transition-opacity duration-200 sm:pr-4 ${
+              className={`absolute inset-y-0 right-0 z-20 flex items-center pr-2 transition-opacity duration-200 sm:pr-3 ${
                 bannerHover ? 'opacity-100' : 'opacity-0'
               }`}
             >
@@ -206,7 +277,7 @@ export default function HomeClient() {
                 type="button"
                 aria-label="Next"
                 onClick={() => swiperRef.current?.slideNext()}
-                className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-black shadow-sm backdrop-blur transition-colors hover:bg-slate-100 hover:text-sky-700"
+                className="inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black shadow-sm transition-colors hover:bg-black hover:text-white"
               >
                 <ChevronRight size={18} />
               </button>
@@ -214,47 +285,31 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="mt-10">
-          <div className="flex items-end justify-between">
-            <h3 className="text-lg font-black tracking-tight">인기 대여 상품</h3>
-            <div className="text-sm font-semibold text-black/40"> </div>
-          </div>
-
-          {filtered.length === 0 ? (
-            <div className="mt-6 rounded-2xl border border-black/10 bg-white p-10 text-center">
-              <p className="text-lg font-black tracking-tight">상품 준비 중</p>
-              <p className="mt-2 text-sm text-black/60">곧 다양한 상품을 업데이트할 예정입니다.</p>
-              <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                {Array.from({ length: 4 }).map((_, idx) => (
-                  <div key={idx} className="animate-pulse">
-                    <div className="aspect-[3/4] rounded-xl bg-black/5" />
-                    <div className="mt-3 h-4 w-24 rounded bg-black/5" />
-                    <div className="mt-2 h-4 w-40 rounded bg-black/5" />
-                    <div className="mt-3 h-4 w-28 rounded bg-black/5" />
-                  </div>
-                ))}
-              </div>
+        <div className="px-4 md:px-6">
+          <section ref={popularRef} className="scroll-mt-20 pt-10">
+            <div className="flex items-end justify-between">
+              <h3 className="text-lg font-black tracking-tight">인기</h3>
             </div>
-          ) : (
-            <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:grid-cols-4 md:gap-x-3 lg:grid-cols-5">
-              {filtered.map((p) => (
+
+            <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {popularItems.map((p) => (
                 <Link key={p.id} href={`/product/${p.id}`} className="group block">
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-black/5">
-                    <div className="absolute left-3 top-3 z-10 inline-flex items-center rounded-md bg-black px-2 py-1 text-[11px] font-bold text-white">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-none bg-black/5">
+                    <div className="absolute left-2 top-2 z-10 inline-flex items-center bg-black px-2 py-1 text-[11px] font-bold text-white">
                       3일 대여
                     </div>
                     <div
-                      className="h-full w-full bg-cover bg-center transition-all duration-300 group-hover:scale-[1.03] group-hover:brightness-[0.96]"
+                      className="h-full w-full bg-cover bg-center transition-all duration-300 group-hover:scale-[1.02] group-hover:brightness-[0.96]"
                       style={{ backgroundImage: `url(${p.imageUrl})` }}
                     />
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-2">
                     <p className="text-sm font-black">{p.brand}</p>
                     <p className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-black/75">
                       {p.name}
                     </p>
-                    <div className="mt-2 flex items-baseline gap-2">
+                    <div className="mt-1 flex items-baseline gap-2">
                       <p className="text-sm font-black">{formatKRW(p.price)}</p>
                       {typeof p.discountRate === 'number' && (
                         <p className="text-sm font-black text-red-600">{p.discountRate}%</p>
@@ -264,43 +319,120 @@ export default function HomeClient() {
                 </Link>
               ))}
             </div>
-          )}
-        </section>
+          </section>
 
-        <section className="mt-12">
+          <section ref={newRef} className="scroll-mt-20 pt-12">
+            <div className="flex items-end justify-between">
+              <h3 className="text-lg font-black tracking-tight">신상</h3>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {newItems.map((p) => (
+                <Link key={p.id} href={`/product/${p.id}`} className="group block">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-none bg-black/5">
+                    <div
+                      className="h-full w-full bg-cover bg-center transition-all duration-300 group-hover:scale-[1.02] group-hover:brightness-[0.96]"
+                      style={{ backgroundImage: `url(${p.imageUrl})` }}
+                    />
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm font-black">{p.brand}</p>
+                    <p className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-black/75">
+                      {p.name}
+                    </p>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <p className="text-sm font-black">{formatKRW(p.price)}</p>
+                      {typeof p.discountRate === 'number' && (
+                        <p className="text-sm font-black text-red-600">{p.discountRate}%</p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section ref={recommendRef} className="scroll-mt-20 pt-12">
+            <div className="flex items-end justify-between">
+              <h3 className="text-lg font-black tracking-tight">추천</h3>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {recommendItems.map((p) => (
+                <Link key={p.id} href={`/product/${p.id}`} className="group block">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-none bg-black/5">
+                    <div
+                      className="h-full w-full bg-cover bg-center transition-all duration-300 group-hover:scale-[1.02] group-hover:brightness-[0.96]"
+                      style={{ backgroundImage: `url(${p.imageUrl})` }}
+                    />
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm font-black">{p.brand}</p>
+                    <p className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-black/75">
+                      {p.name}
+                    </p>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <p className="text-sm font-black">{formatKRW(p.price)}</p>
+                      {typeof p.discountRate === 'number' && (
+                        <p className="text-sm font-black text-red-600">{p.discountRate}%</p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <section className="mt-12 px-4 md:px-6">
           <div className="flex items-end justify-between">
-            <h3 className="text-lg font-black tracking-tight">신규 입점 브랜드</h3>
-            <Link
-              href="/brand/intro"
-              className="text-sm font-bold text-black/50 transition-colors hover:text-sky-700"
-            >
+            <h3 className="text-lg font-black tracking-tight">신규 브랜드</h3>
+            <Link href="/brand/intro" className="text-sm font-bold text-black/50 transition-colors hover:text-black">
               더보기
             </Link>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-            {brandCards.map((b) => (
-              <Link
-                key={b.id}
-                href="/"
-                className="group relative flex items-center overflow-hidden rounded-2xl border border-black/10 bg-white"
-              >
-                <div className="relative h-20 w-28 shrink-0 overflow-hidden bg-black/5 md:h-24 md:w-36">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-[1.04]"
-                    style={{ backgroundImage: `url(${b.imageUrl})` }}
-                  />
-                  <div className="absolute inset-0 bg-black/10 transition-colors group-hover:bg-black/20" />
-                </div>
-                <div className="flex-1 px-4 py-4">
-                  <p className="text-xs font-black tracking-[0.22em] text-black/40 transition-colors group-hover:text-sky-700">
-                    {b.tagline}
-                  </p>
-                  <p className="mt-1 text-sm font-black text-black">{b.name}</p>
-                  <p className="mt-1 text-sm font-semibold text-black/60">대표 화보/로고 영역</p>
-                </div>
-              </Link>
-            ))}
+          <div className="relative mt-4 border border-black/15 bg-white">
+            <Swiper
+              onSwiper={(s) => {
+                brandSwiperRef.current = s;
+              }}
+              slidesPerView={3}
+              slidesPerGroup={1}
+              spaceBetween={1}
+              loop
+              speed={420}
+              className="w-full"
+            >
+              {brandCards.map((b) => (
+                <SwiperSlide key={b.id}>
+                  <Link href="/" className="block">
+                    <div className="flex items-center gap-3 p-4">
+                      <div className="h-12 w-12 shrink-0 bg-black/5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-black">{b.name}</p>
+                        <p className="mt-1 text-xs font-bold text-black/50">{b.tagline}</p>
+                      </div>
+                    </div>
+                  </Link>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+            <button
+              type="button"
+              aria-label="Prev brand"
+              onClick={() => brandSwiperRef.current?.slidePrev()}
+              className="absolute left-2 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black transition-colors hover:bg-black hover:text-white"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next brand"
+              onClick={() => brandSwiperRef.current?.slideNext()}
+              className="absolute right-2 top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center border border-black/20 bg-white text-black transition-colors hover:bg-black hover:text-white"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </section>
       </main>
