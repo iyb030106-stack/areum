@@ -16,41 +16,69 @@ export default function Page() {
     () => [
       {
         id: 'b1',
-        title: 'LENOVA TECHWEAR DROP',
-        subtitle: '도심을 위한 기능성, 오늘의 룩을 완성',
+        label: '신규 입점 브랜드',
         imageUrl:
-          'https://images.unsplash.com/photo-1520975958221-ecdc0f2b36f4?auto=format&fit=crop&w=1800&q=80',
+          'https://images.unsplash.com/photo-1520975958221-ecdc0f2b36f4?auto=format&fit=crop&w=2400&q=80',
       },
       {
         id: 'b2',
-        title: '3일 대여, 더 가볍게',
-        subtitle: '입어보고 결정하는 새로운 쇼핑 방식',
+        label: '이달의 테크웨어',
         imageUrl:
-          'https://images.unsplash.com/photo-1520975661597-171c1d3d0d6e?auto=format&fit=crop&w=1800&q=80',
+          'https://images.unsplash.com/photo-1520975661597-171c1d3d0d6e?auto=format&fit=crop&w=2400&q=80',
       },
       {
         id: 'b3',
-        title: '무신사 감성, 아름의 방식',
-        subtitle: '미니멀한 UI로 더 빠르게 탐색',
+        label: '대여 랭킹',
         imageUrl:
-          'https://images.unsplash.com/photo-1520975691759-54a9556eab8e?auto=format&fit=crop&w=1800&q=80',
+          'https://images.unsplash.com/photo-1520975691759-54a9556eab8e?auto=format&fit=crop&w=2400&q=80',
+      },
+      {
+        id: 'b4',
+        label: '봄 신상 큐레이션',
+        imageUrl:
+          'https://images.unsplash.com/photo-1520975940040-9c4f9d6cf234?auto=format&fit=crop&w=2400&q=80',
+      },
+      {
+        id: 'b5',
+        label: '셋업 추천',
+        imageUrl:
+          'https://images.unsplash.com/photo-1520975908176-5fd3b7c29f10?auto=format&fit=crop&w=2400&q=80',
+      },
+      {
+        id: 'b6',
+        label: '미니멀 에센셜',
+        imageUrl:
+          'https://images.unsplash.com/photo-1520976005004-3a778f6651c1?auto=format&fit=crop&w=2400&q=80',
       },
     ],
     []
   );
 
+  const visibleCount = 3;
   const [active, setActive] = useState(0);
+  const [carouselIndex, setCarouselIndex] = useState(visibleCount);
+  const [carouselTransition, setCarouselTransition] = useState(true);
+  const [bannerHover, setBannerHover] = useState(false);
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<'category' | 'brand' | 'service' | null>(null);
 
   useEffect(() => {
+    setCarouselTransition(false);
+    setCarouselIndex(visibleCount);
+    setActive(0);
+  }, [banners.length]);
+
+  useEffect(() => {
+    if (bannerHover) return;
     const t = window.setInterval(() => {
+      setCarouselIndex((prev) => prev + 1);
+      setCarouselTransition(true);
       setActive((prev) => (prev + 1) % banners.length);
     }, 4500);
 
     return () => window.clearInterval(t);
-  }, [banners.length]);
+  }, [bannerHover, banners.length]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -64,6 +92,28 @@ export default function Page() {
     setOpenSection((prev) => (prev === key ? null : key));
   };
 
+  const prevBanner = () => {
+    setCarouselIndex((prev) => prev - 1);
+    setCarouselTransition(true);
+    setActive((prev) => (prev - 1 + banners.length) % banners.length);
+  };
+
+  const nextBanner = () => {
+    setCarouselIndex((prev) => prev + 1);
+    setCarouselTransition(true);
+    setActive((prev) => (prev + 1) % banners.length);
+  };
+
+  const extendedBanners = useMemo(() => {
+    if (banners.length === 0) return [] as typeof banners;
+    const head = banners.slice(0, visibleCount);
+    const tail = banners.slice(-visibleCount);
+    return [...tail, ...banners, ...head];
+  }, [banners, visibleCount]);
+
+  const itemWidthPercent = 100 / visibleCount;
+  const translatePercent = -(carouselIndex * itemWidthPercent);
+
   return (
     <div className="min-h-screen bg-white text-black">
       <header className="sticky top-0 z-30 border-b border-black/10 bg-white/90 backdrop-blur">
@@ -72,7 +122,7 @@ export default function Page() {
             type="button"
             aria-label="Open menu"
             onClick={() => setDrawerOpen(true)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white hover:bg-black/5"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white transition-colors hover:bg-slate-100 hover:text-sky-700"
           >
             <Menu size={20} />
           </button>
@@ -93,14 +143,7 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="flex items-center">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center rounded-full border border-black/15 bg-white px-4 py-2 text-sm font-bold hover:bg-black/5"
-            >
-              로그인
-            </Link>
-          </div>
+          <div className="w-10" />
         </div>
       </header>
 
@@ -121,7 +164,7 @@ export default function Page() {
                 type="button"
                 aria-label="Close menu"
                 onClick={() => setDrawerOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white hover:bg-black/5"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white transition-colors hover:bg-slate-100 hover:text-sky-700"
               >
                 <X size={20} />
               </button>
@@ -131,7 +174,7 @@ export default function Page() {
               <button
                 type="button"
                 onClick={() => toggleSection('category')}
-                className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-black hover:bg-black/5"
+                className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-black transition-colors hover:bg-slate-100 hover:text-sky-700"
               >
                 카테고리
                 <ChevronDown
@@ -146,7 +189,7 @@ export default function Page() {
                       key={label}
                       type="button"
                       onClick={() => setDrawerOpen(false)}
-                      className="block w-full rounded-lg px-2 py-2 text-left text-sm font-semibold text-black/70 hover:bg-black/5 hover:text-black"
+                      className="block w-full rounded-lg px-2 py-2 text-left text-sm font-semibold text-black/70 transition-colors hover:bg-slate-100 hover:text-sky-700"
                     >
                       {label}
                     </button>
@@ -157,7 +200,7 @@ export default function Page() {
               <button
                 type="button"
                 onClick={() => toggleSection('brand')}
-                className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-black hover:bg-black/5"
+                className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-black transition-colors hover:bg-slate-100 hover:text-sky-700"
               >
                 브랜드
                 <ChevronDown
@@ -174,7 +217,7 @@ export default function Page() {
                         key={label}
                         type="button"
                         onClick={() => setDrawerOpen(false)}
-                        className="block w-full rounded-lg px-2 py-2 text-left text-sm font-semibold text-black/70 hover:bg-black/5 hover:text-black"
+                        className="block w-full rounded-lg px-2 py-2 text-left text-sm font-semibold text-black/70 transition-colors hover:bg-slate-100 hover:text-sky-700"
                       >
                         {label}
                       </button>
@@ -186,7 +229,7 @@ export default function Page() {
               <button
                 type="button"
                 onClick={() => toggleSection('service')}
-                className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-black hover:bg-black/5"
+                className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-black transition-colors hover:bg-slate-100 hover:text-sky-700"
               >
                 서비스
                 <ChevronDown
@@ -199,9 +242,16 @@ export default function Page() {
                   <Link
                     href="/brand"
                     onClick={() => setDrawerOpen(false)}
-                    className="block rounded-lg px-2 py-2 text-sm font-bold text-black hover:bg-black/5"
+                    className="block rounded-lg px-2 py-2 text-sm font-bold text-black transition-colors hover:bg-slate-100 hover:text-sky-700"
                   >
                     브랜드 파트너 신청
+                  </Link>
+                  <Link
+                    href="/community"
+                    onClick={() => setDrawerOpen(false)}
+                    className="block rounded-lg px-2 py-2 text-sm font-bold text-black transition-colors hover:bg-slate-100 hover:text-sky-700"
+                  >
+                    커뮤니티
                   </Link>
                 </div>
               )}
@@ -211,44 +261,79 @@ export default function Page() {
       )}
 
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-6 md:px-6">
-        <section className="relative overflow-hidden rounded-2xl bg-black">
-          <div className="relative h-[340px] md:h-[420px]">
-            {banners.map((b, idx) => (
+        <section
+          className="group relative overflow-hidden rounded-2xl border border-black/10 bg-white"
+          onMouseEnter={() => setBannerHover(true)}
+          onMouseLeave={() => setBannerHover(false)}
+        >
+          <div className="relative">
+            <div className="overflow-hidden p-3 sm:p-4">
               <div
-                key={b.id}
-                className={`absolute inset-0 transition-opacity duration-700 ${
-                  idx === active ? 'opacity-100' : 'opacity-0'
-                }`}
+                className="flex"
+                style={{
+                  width: `${extendedBanners.length * itemWidthPercent}%`,
+                  transform: `translateX(${translatePercent}%)`,
+                  transition: carouselTransition ? 'transform 520ms ease' : 'none',
+                }}
+                onTransitionEnd={() => {
+                  if (banners.length === 0) return;
+                  const maxIndex = banners.length + visibleCount;
+                  if (carouselIndex >= maxIndex) {
+                    setCarouselTransition(false);
+                    setCarouselIndex(visibleCount);
+                  }
+                  if (carouselIndex < visibleCount) {
+                    setCarouselTransition(false);
+                    setCarouselIndex(banners.length + carouselIndex);
+                  }
+                }}
               >
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${b.imageUrl})` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/10" />
-
-                <div className="relative z-10 flex h-full items-end p-6 md:p-10">
-                  <div>
-                    <p className="text-xs font-bold tracking-[0.3em] text-white/80">FEATURED</p>
-                    <h2 className="mt-3 text-2xl font-black text-white md:text-4xl">{b.title}</h2>
-                    <p className="mt-3 max-w-xl text-sm font-semibold text-white/85 md:text-base">
-                      {b.subtitle}
-                    </p>
+                {extendedBanners.map((b, idx) => (
+                  <div key={`${b.id}-${idx}`} style={{ width: `${itemWidthPercent}%` }}>
+                    <div className="px-1.5 sm:px-2">
+                      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-black/5">
+                        <div
+                          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-[1.02]"
+                          style={{ backgroundImage: `url(${b.imageUrl})` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <p className="text-xs font-black tracking-tight text-white/90">{b.label}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
 
-            <div className="absolute bottom-4 left-6 z-20 flex gap-2">
-              {banners.map((b, idx) => (
-                <button
-                  key={b.id}
-                  onClick={() => setActive(idx)}
-                  className={`h-1.5 w-8 rounded-full transition-colors ${
-                    idx === active ? 'bg-white' : 'bg-white/35'
-                  }`}
-                  aria-label={`Go to banner ${idx + 1}`}
-                />
-              ))}
+            <div
+              className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-opacity duration-200 sm:pl-4 ${
+                bannerHover ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <button
+                type="button"
+                aria-label="Previous"
+                onClick={prevBanner}
+                className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/90 text-sm font-black text-black shadow-sm backdrop-blur transition-colors hover:bg-slate-100 hover:text-sky-700"
+              >
+                {'<'}
+              </button>
+            </div>
+            <div
+              className={`pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 transition-opacity duration-200 sm:pr-4 ${
+                bannerHover ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <button
+                type="button"
+                aria-label="Next"
+                onClick={nextBanner}
+                className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/90 text-sm font-black text-black shadow-sm backdrop-blur transition-colors hover:bg-slate-100 hover:text-sky-700"
+              >
+                {'>'}
+              </button>
             </div>
           </div>
         </section>
