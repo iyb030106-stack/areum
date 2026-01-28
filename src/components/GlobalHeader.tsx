@@ -12,7 +12,14 @@ type BrandSession = {
   email: string;
 };
 
+type UserSession = {
+  role: 'user';
+  nickname: string;
+  email: string;
+};
+
 const BRAND_SESSION_KEY = 'areum_brand_session';
+const USER_SESSION_KEY = 'areum_user_session';
 
 export default function GlobalHeader() {
   const pathname = usePathname();
@@ -21,19 +28,33 @@ export default function GlobalHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<'category' | 'brand' | 'service' | null>(null);
   const [brandSession, setBrandSession] = useState<BrandSession | null>(null);
+  const [userSession, setUserSession] = useState<UserSession | null>(null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(BRAND_SESSION_KEY);
       if (!raw) {
         setBrandSession(null);
-        return;
+      } else {
+        const parsed = JSON.parse(raw) as BrandSession;
+        if (parsed?.role === 'brand' && parsed.brandName) setBrandSession(parsed);
+        else setBrandSession(null);
       }
-      const parsed = JSON.parse(raw) as BrandSession;
-      if (parsed?.role === 'brand' && parsed.brandName) setBrandSession(parsed);
-      else setBrandSession(null);
     } catch (_err) {
       setBrandSession(null);
+    }
+
+    try {
+      const raw = localStorage.getItem(USER_SESSION_KEY);
+      if (!raw) {
+        setUserSession(null);
+        return;
+      }
+      const parsed = JSON.parse(raw) as UserSession;
+      if (parsed?.role === 'user' && parsed.nickname) setUserSession(parsed);
+      else setUserSession(null);
+    } catch (_err) {
+      setUserSession(null);
     }
   }, [pathname]);
 
@@ -78,8 +99,39 @@ export default function GlobalHeader() {
                     try {
                       localStorage.removeItem(BRAND_SESSION_KEY);
                       setBrandSession(null);
+                      localStorage.removeItem(USER_SESSION_KEY);
+                      setUserSession(null);
                       await supabase?.auth.signOut();
                     } catch (_err) {
+                      localStorage.removeItem(BRAND_SESSION_KEY);
+                      setBrandSession(null);
+                      localStorage.removeItem(USER_SESSION_KEY);
+                      setUserSession(null);
+                    }
+                  }}
+                  className="inline-flex h-10 items-center justify-center rounded-full border border-white/15 bg-white/0 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10 hover:text-sky-300"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : userSession ? (
+              <>
+                <span className="text-sm font-black text-white">
+                  {userSession.nickname}
+                  <span className="text-white/70">님 환영합니다</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      localStorage.removeItem(USER_SESSION_KEY);
+                      setUserSession(null);
+                      localStorage.removeItem(BRAND_SESSION_KEY);
+                      setBrandSession(null);
+                      await supabase?.auth.signOut();
+                    } catch (_err) {
+                      localStorage.removeItem(USER_SESSION_KEY);
+                      setUserSession(null);
                       localStorage.removeItem(BRAND_SESSION_KEY);
                       setBrandSession(null);
                     }

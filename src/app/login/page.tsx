@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
 type BrandSession = {
@@ -11,10 +11,26 @@ type BrandSession = {
   email: string;
 };
 
+type UserSession = {
+  role: 'user';
+  nickname: string;
+  email: string;
+};
+
 const BRAND_SESSION_KEY = 'areum_brand_session';
+const USER_SESSION_KEY = 'areum_user_session';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [welcome, setWelcome] = useState(false);
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setWelcome(params.get('welcome') === '1');
+    } catch (_err) {
+      setWelcome(false);
+    }
+  }, []);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,6 +61,30 @@ export default function LoginPage() {
     } catch (_err) {
       const data = await trySelect('profiles');
       return data?.brand_name ?? null;
+    }
+  };
+
+  const resolveNickname = async (userId: string) => {
+    if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
+    const client = supabase;
+
+    const trySelect = async (table: 'profiles' | 'users') => {
+      const { data, error: selectError } = await client
+        .from(table)
+        .select('nickname')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (selectError) throw selectError;
+      return data as null | { nickname?: string };
+    };
+
+    try {
+      const data = await trySelect('profiles');
+      return data?.nickname ?? null;
+    } catch (_err) {
+      const data = await trySelect('users');
+      return data?.nickname ?? null;
     }
   };
 
@@ -156,8 +196,14 @@ export default function LoginPage() {
           const brandNameResolved = metaBrand || (await resolveBrandName(userId)) || email.split('@')[0];
           const session: BrandSession = { role: 'brand', brandName: brandNameResolved, email };
           localStorage.setItem(BRAND_SESSION_KEY, JSON.stringify(session));
+          localStorage.removeItem(USER_SESSION_KEY);
           router.push('/');
         } else {
+          const meta = (data.user?.user_metadata as any) ?? {};
+          const metaNick = (meta.nickname as string | undefined) ?? undefined;
+          const nicknameResolved = metaNick || (userId ? await resolveNickname(userId) : null) || email.split('@')[0];
+          const session: UserSession = { role: 'user', nickname: nicknameResolved, email };
+          localStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
           localStorage.removeItem(BRAND_SESSION_KEY);
           router.push('/');
         }
@@ -186,6 +232,12 @@ export default function LoginPage() {
             ? '브랜드 파트너 계정을 생성합니다.'
             : 'Supabase Auth로 로그인합니다.'}
         </p>
+
+        {welcome && (
+          <div className="mt-6 border border-black/15 bg-white px-4 py-3 text-sm font-black text-black">
+            아름의 파트너가 되신 것을 환영합니다!
+          </div>
+        )}
 
         {error && (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
