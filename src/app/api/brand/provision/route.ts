@@ -86,20 +86,9 @@ export async function POST(req: Request) {
     role: 'PARTNER' as const,
   };
 
-  // Try brands first, fallback profiles
-  const insertTo = async (table: 'brands' | 'profiles') => {
-    const { error } = await admin.from(table).insert(profilePayload);
-    if (error) throw error;
-  };
-
-  try {
-    await insertTo('brands');
-  } catch (_err) {
-    try {
-      await insertTo('profiles');
-    } catch (_err2) {
-      // ignore: auth user created is still valid
-    }
+  const { error: profileError } = await admin.from('partners').insert(profilePayload);
+  if (profileError) {
+    // ignore: auth user created is still valid
   }
 
   return NextResponse.json({ email, password, existed: false }, { status: 201 });

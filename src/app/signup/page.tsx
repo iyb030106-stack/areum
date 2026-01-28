@@ -36,21 +36,8 @@ export default function SignupPage() {
     if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
     const client = supabase;
 
-    const tryInsert = async (table: 'profiles' | 'users') => {
-      const { error: insertError } = await client.from(table).insert({ user_id: userId, ...payload });
-      if (insertError) throw insertError;
-    };
-
-    try {
-      await tryInsert('profiles');
-      return;
-    } catch (_err) {
-      try {
-        await tryInsert('users');
-      } catch (_err2) {
-        // If neither table exists, ignore profile insert.
-      }
-    }
+    const { error: insertError } = await client.from('consumers').insert({ user_id: userId, ...payload });
+    if (insertError) throw insertError;
   };
 
   const onSubmit = async (e: React.FormEvent) => {

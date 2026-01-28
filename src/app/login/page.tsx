@@ -40,74 +40,43 @@ export default function LoginPage() {
     if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
     const client = supabase;
 
-    const trySelect = async (table: 'brands' | 'profiles') => {
-      const { data, error: selectError } = await client
-        .from(table)
-        .select('brand_name')
-        .eq('user_id', userId)
-        .maybeSingle();
+    const { data, error: selectError } = await client
+      .from('partners')
+      .select('brand_name')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-      if (selectError) throw selectError;
-      return data as null | { brand_name?: string };
-    };
-
-    try {
-      const data = await trySelect('brands');
-      return data?.brand_name ?? null;
-    } catch (_err) {
-      const data = await trySelect('profiles');
-      return data?.brand_name ?? null;
-    }
+    if (selectError) throw selectError;
+    return (data as null | { brand_name?: string })?.brand_name ?? null;
   };
 
   const resolveNickname = async (userId: string) => {
     if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
     const client = supabase;
 
-    const trySelect = async (table: 'profiles' | 'users') => {
-      const { data, error: selectError } = await client
-        .from(table)
-        .select('nickname')
-        .eq('user_id', userId)
-        .maybeSingle();
+    const { data, error: selectError } = await client
+      .from('consumers')
+      .select('nickname')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-      if (selectError) throw selectError;
-      return data as null | { nickname?: string };
-    };
-
-    try {
-      const data = await trySelect('profiles');
-      return data?.nickname ?? null;
-    } catch (_err) {
-      const data = await trySelect('users');
-      return data?.nickname ?? null;
-    }
+    if (selectError) throw selectError;
+    return (data as null | { nickname?: string })?.nickname ?? null;
   };
 
   const isBrandAccount = async (userId: string) => {
     if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
     const client = supabase;
 
-    const trySelect = async (table: 'brands' | 'profiles') => {
-      const { data, error: selectError } = await client
-        .from(table)
-        .select('user_id, role')
-        .eq('user_id', userId)
-        .maybeSingle();
+    const { data, error: selectError } = await client
+      .from('partners')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-      if (selectError) throw selectError;
-      return data as null | { user_id?: string; role?: string };
-    };
-
-    try {
-      const data = await trySelect('brands');
-      if (data?.user_id) return true;
-      return false;
-    } catch (_err) {
-      const data = await trySelect('profiles');
-      if (data?.user_id && (data.role === 'PARTNER' || data.role === 'partner' || data.role === 'brand')) return true;
-      return Boolean(data?.user_id);
-    }
+    if (selectError) throw selectError;
+    const row = data as null | { user_id?: string };
+    return Boolean(row?.user_id);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
