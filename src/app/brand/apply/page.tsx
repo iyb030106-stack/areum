@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { CheckCircle2, X } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
 
 export default function BrandApplyPage() {
   const [brandName, setBrandName] = useState('');
@@ -25,29 +24,6 @@ export default function BrandApplyPage() {
     setSubmitting(true);
 
     try {
-      if (!supabase) {
-        throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
-      }
-
-      const composedMessage = [
-        managerName ? `담당자 이름: ${managerName}` : null,
-        website ? `브랜드 웹사이트: ${website}` : null,
-        message ? `메시지: ${message}` : null,
-      ]
-        .filter(Boolean)
-        .join('\n\n');
-
-      const { error: insertError } = await supabase.from('brand_applications').insert({
-        brand_name: brandName,
-        contact,
-        category: website,
-        message: composedMessage,
-      });
-
-      if (insertError) {
-        throw insertError;
-      }
-
       setProvisionedEmail(null);
       setProvisionedPassword(null);
       setProvisionedExisted(null);
@@ -56,7 +32,7 @@ export default function BrandApplyPage() {
         const resp = await fetch('/api/brand/provision', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brandName, managerName, contact }),
+          body: JSON.stringify({ brandName, managerName, contact, website, message }),
         });
 
         const json = (await resp.json().catch(() => null)) as null | {
@@ -77,9 +53,9 @@ export default function BrandApplyPage() {
         if (err && typeof err === 'object') {
           const anyErr = err as Record<string, unknown>;
           const msg = typeof anyErr.message === 'string' ? anyErr.message : null;
-          setError(msg || '입점 신청은 완료되었으나, 계정 생성 중 오류가 발생했습니다.');
+          setError(msg || '계정 생성 중 오류가 발생했습니다.');
         } else {
-          setError('입점 신청은 완료되었으나, 계정 생성 중 오류가 발생했습니다.');
+          setError('계정 생성 중 오류가 발생했습니다.');
         }
       }
 
@@ -115,7 +91,7 @@ export default function BrandApplyPage() {
               <h1 className="mt-3 text-2xl font-bold tracking-tight text-zinc-950">입점 문의</h1>
               <p className="mt-2 text-sm text-zinc-700">아래 폼을 남겨주시면 확인 후 빠르게 연락드리겠습니다.</p>
             </div>
-            <div className="text-xs font-medium text-zinc-500">저장: Supabase brand_applications</div>
+            <div className="text-xs font-medium text-zinc-500">저장: Supabase partners</div>
           </div>
 
           {error && (

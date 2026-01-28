@@ -25,6 +25,8 @@ export async function POST(req: Request) {
     brandName?: string;
     managerName?: string;
     contact?: string;
+    website?: string;
+    message?: string;
   };
 
   const brandName = (body?.brandName ?? '').trim();
@@ -56,6 +58,8 @@ export async function POST(req: Request) {
       brand_name: brandName,
       manager_name: body?.managerName ?? null,
       contact: body?.contact ?? null,
+      website: body?.website ?? null,
+      message: body?.message ?? null,
     },
   });
 
@@ -69,6 +73,27 @@ export async function POST(req: Request) {
       lower.includes('duplicate');
 
     if (existed) {
+      const { data: listData } = await admin.auth.admin.listUsers({ page: 1, perPage: 2000 });
+      const user = listData?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+      const userId = user?.id;
+
+      if (userId) {
+        const profilePayload = {
+          user_id: userId,
+          email,
+          brand_name: brandName,
+          owner_name: body?.managerName ?? null,
+          phone: body?.contact ?? null,
+          website: body?.website ?? null,
+          message: body?.message ?? null,
+          role: 'PARTNER' as const,
+        };
+
+        await admin
+          .from('partners')
+          .upsert(profilePayload, { onConflict: 'user_id', ignoreDuplicates: false });
+      }
+
       return NextResponse.json({ email, existed: true }, { status: 200 });
     }
 
@@ -83,10 +108,14 @@ export async function POST(req: Request) {
     brand_name: brandName,
     owner_name: body?.managerName ?? null,
     phone: body?.contact ?? null,
+    website: body?.website ?? null,
+    message: body?.message ?? null,
     role: 'PARTNER' as const,
   };
 
-  const { error: profileError } = await admin.from('partners').insert(profilePayload);
+  const { error: profileError } = await admin
+    .from('partners')
+    .upsert(profilePayload, { onConflict: 'user_id', ignoreDuplicates: false });
   if (profileError) {
     // ignore: auth user created is still valid
   }

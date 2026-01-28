@@ -32,14 +32,6 @@ export default function SignupPage() {
     return emailOk && passwordOk && passwordMatch;
   }, [phone, nickname, emailOk, passwordOk, passwordMatch]);
 
-  const insertProfile = async (userId: string, payload: Record<string, unknown>) => {
-    if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
-    const client = supabase;
-
-    const { error: insertError } = await client.from('consumers').insert({ user_id: userId, ...payload });
-    if (insertError) throw insertError;
-  };
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -69,13 +61,6 @@ export default function SignupPage() {
       if (!userId) {
         throw new Error('회원가입이 완료되었습니다. 이메일 인증 후 다시 로그인해주세요.');
       }
-
-      await insertProfile(userId, {
-        email,
-        role: 'USER',
-        nickname,
-        phone,
-      });
 
       router.push('/login?welcome=1');
     } catch (err) {
