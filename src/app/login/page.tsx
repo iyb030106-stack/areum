@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
+type BrandSession = {
+  role: 'brand';
+  brandName: string;
+  email: string;
+};
+
+const BRAND_SESSION_KEY = 'areum_brand_session';
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -15,6 +23,30 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const resolveBrandName = async (userId: string) => {
+    if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
+    const client = supabase;
+
+    const trySelect = async (table: 'brands' | 'profiles') => {
+      const { data, error: selectError } = await client
+        .from(table)
+        .select('brand_name')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (selectError) throw selectError;
+      return data as null | { brand_name?: string };
+    };
+
+    try {
+      const data = await trySelect('brands');
+      return data?.brand_name ?? null;
+    } catch (_err) {
+      const data = await trySelect('profiles');
+      return data?.brand_name ?? null;
+    }
+  };
 
   const insertBrandProfile = async (userId: string) => {
     if (!supabase) throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
@@ -101,7 +133,11 @@ export default function LoginPage() {
         const userId = data.user?.id;
         if (userId) {
           await insertBrandProfile(userId);
-          router.push('/brand');
+          const brand = (data.user?.user_metadata as any)?.brand_name as string | undefined;
+          const brandNameResolved = brand || brandName || (await resolveBrandName(userId)) || '파트너';
+          const session: BrandSession = { role: 'brand', brandName: brandNameResolved, email };
+          localStorage.setItem(BRAND_SESSION_KEY, JSON.stringify(session));
+          router.push('/');
         } else {
           throw new Error('회원가입이 완료되었습니다. 이메일 인증 후 다시 로그인해주세요.');
         }
@@ -115,8 +151,14 @@ export default function LoginPage() {
 
         const userId = data.user?.id;
         if (userId && (await isBrandAccount(userId))) {
-          router.push('/brand');
+          const meta = (data.user?.user_metadata as any) ?? {};
+          const metaBrand = (meta.brand_name as string | undefined) ?? undefined;
+          const brandNameResolved = metaBrand || (await resolveBrandName(userId)) || email.split('@')[0];
+          const session: BrandSession = { role: 'brand', brandName: brandNameResolved, email };
+          localStorage.setItem(BRAND_SESSION_KEY, JSON.stringify(session));
+          router.push('/');
         } else {
+          localStorage.removeItem(BRAND_SESSION_KEY);
           router.push('/');
         }
       }

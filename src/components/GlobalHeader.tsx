@@ -2,8 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Menu, X, ChevronDown } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+
+type BrandSession = {
+  role: 'brand';
+  brandName: string;
+  email: string;
+};
+
+const BRAND_SESSION_KEY = 'areum_brand_session';
 
 export default function GlobalHeader() {
   const pathname = usePathname();
@@ -11,6 +20,22 @@ export default function GlobalHeader() {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<'category' | 'brand' | 'service' | null>(null);
+  const [brandSession, setBrandSession] = useState<BrandSession | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(BRAND_SESSION_KEY);
+      if (!raw) {
+        setBrandSession(null);
+        return;
+      }
+      const parsed = JSON.parse(raw) as BrandSession;
+      if (parsed?.role === 'brand' && parsed.brandName) setBrandSession(parsed);
+      else setBrandSession(null);
+    } catch (_err) {
+      setBrandSession(null);
+    }
+  }, [pathname]);
 
   const toggleSection = (key: 'category' | 'brand' | 'service') => {
     setOpenSection((prev) => (prev === key ? null : key));
@@ -40,6 +65,39 @@ export default function GlobalHeader() {
           <Link href="/" className="shrink-0 text-lg font-black tracking-tight text-white">
             areum
           </Link>
+
+          <div className="ml-auto flex items-center gap-2">
+            {brandSession ? (
+              <>
+                <span className="text-sm font-black text-white">
+                  {brandSession.brandName} <span className="text-white/70">파트너님</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      localStorage.removeItem(BRAND_SESSION_KEY);
+                      setBrandSession(null);
+                      await supabase?.auth.signOut();
+                    } catch (_err) {
+                      localStorage.removeItem(BRAND_SESSION_KEY);
+                      setBrandSession(null);
+                    }
+                  }}
+                  className="inline-flex h-10 items-center justify-center rounded-full border border-white/15 bg-white/0 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10 hover:text-sky-300"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-white/15 bg-white/0 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10 hover:text-sky-300"
+              >
+                로그인
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

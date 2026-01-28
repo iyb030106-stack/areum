@@ -11,6 +11,10 @@ export default function BrandApplyPage() {
   const [website, setWebsite] = useState('');
   const [message, setMessage] = useState('');
 
+  const [provisionedEmail, setProvisionedEmail] = useState<string | null>(null);
+  const [provisionedPassword, setProvisionedPassword] = useState<string | null>(null);
+  const [provisionedExisted, setProvisionedExisted] = useState<boolean | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
@@ -42,6 +46,41 @@ export default function BrandApplyPage() {
 
       if (insertError) {
         throw insertError;
+      }
+
+      setProvisionedEmail(null);
+      setProvisionedPassword(null);
+      setProvisionedExisted(null);
+
+      try {
+        const resp = await fetch('/api/brand/provision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brandName, managerName, contact }),
+        });
+
+        const json = (await resp.json().catch(() => null)) as null | {
+          email?: string;
+          password?: string;
+          existed?: boolean;
+          error?: string;
+        };
+
+        if (!resp.ok) {
+          throw new Error(json?.error || '계정 생성에 실패했습니다.');
+        }
+
+        setProvisionedEmail(json?.email ?? null);
+        setProvisionedPassword(json?.password ?? null);
+        setProvisionedExisted(Boolean(json?.existed));
+      } catch (err) {
+        if (err && typeof err === 'object') {
+          const anyErr = err as Record<string, unknown>;
+          const msg = typeof anyErr.message === 'string' ? anyErr.message : null;
+          setError(msg || '입점 신청은 완료되었으나, 계정 생성 중 오류가 발생했습니다.');
+        } else {
+          setError('입점 신청은 완료되었으나, 계정 생성 중 오류가 발생했습니다.');
+        }
       }
 
       setSuccessOpen(true);
@@ -174,6 +213,21 @@ export default function BrandApplyPage() {
               <div>
                 <h3 className="text-lg font-bold text-zinc-950">문의가 접수되었습니다.</h3>
                 <p className="mt-2 text-sm text-zinc-700">남겨주신 내용은 확인 후 빠르게 연락드리겠습니다.</p>
+
+                {provisionedEmail && (
+                  <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                    <p className="text-xs font-semibold text-zinc-600">자동 생성된 파트너 계정</p>
+                    <p className="mt-2 text-sm font-bold text-zinc-900">ID: {provisionedEmail}</p>
+                    {provisionedExisted ? (
+                      <p className="mt-1 text-sm text-zinc-700">이미 존재하는 계정입니다.</p>
+                    ) : (
+                      <p className="mt-1 text-sm font-bold text-zinc-900">초기 비밀번호: {provisionedPassword}</p>
+                    )}
+                    <p className="mt-2 text-xs text-zinc-500">
+                      최초 로그인 후 마이페이지에서 비밀번호를 변경해주세요.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
