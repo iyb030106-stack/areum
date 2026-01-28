@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          'Missing env. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the server environment.',
+          '서버 환경변수가 설정되지 않았습니다. Vercel(또는 배포 플랫폼) 환경변수에 NEXT_PUBLIC_SUPABASE_URL 과 SUPABASE_SERVICE_ROLE_KEY 를 등록해주세요.',
       },
       { status: 500 }
     );
@@ -31,13 +31,13 @@ export async function POST(req: Request) {
 
   const brandName = (body?.brandName ?? '').trim();
   if (!brandName) {
-    return NextResponse.json({ error: 'brandName is required' }, { status: 400 });
+    return NextResponse.json({ error: '브랜드명(brandName)은 필수입니다.' }, { status: 400 });
   }
 
   const slug = normalizeBrandSlug(brandName);
   if (!slug) {
     return NextResponse.json(
-      { error: 'brandName must contain at least one ASCII letter/number for ID generation.' },
+      { error: '브랜드명(brandName)에 영문/숫자가 포함되어야 계정 ID를 생성할 수 있습니다.' },
       { status: 400 }
     );
   }
@@ -97,7 +97,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ email, existed: true }, { status: 200 });
     }
 
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json(
+      { error: '계정 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+      { status: 500 }
+    );
   }
 
   const userId = created.user.id;

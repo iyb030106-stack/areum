@@ -17,8 +17,8 @@ export default function BrandLayout({
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-6">
           <div className="flex items-center gap-7">
-            <Link href="/brand" className="text-sm font-extrabold tracking-tight text-zinc-950 sm:text-base">
-              Areum Partner Channel
+            <Link href="/" className="text-sm font-extrabold tracking-tight text-zinc-950 sm:text-base">
+              아름(ARUM)
             </Link>
 
             <nav className="flex max-w-[55vw] items-center gap-5 overflow-x-auto text-nowrap sm:max-w-none">
@@ -35,6 +35,13 @@ export default function BrandLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-2 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-100"
+            >
+              <span className="hidden sm:inline">메인으로 돌아가기</span>
+              <span className="sm:hidden">메인</span>
+            </Link>
             <Link
               href="/brand/apply"
               className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
