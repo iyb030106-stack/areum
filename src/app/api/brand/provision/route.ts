@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     password,
     email_confirm: true,
     user_metadata: {
-      role: 'brand',
+      role: 'PARTNER',
       brand_name: brandName,
       manager_name: body?.managerName ?? null,
       contact: body?.contact ?? null,
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     brand_name: brandName,
     owner_name: body?.managerName ?? null,
     phone: body?.contact ?? null,
-    role: 'brand' as const,
+    role: 'PARTNER' as const,
   };
 
   // Try brands first, fallback profiles
